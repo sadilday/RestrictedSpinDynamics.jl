@@ -1,0 +1,6 @@
+# observable-informed basis vs observable; TEMPOL-like radical + solvent (11 spins); full grade-3=4984
+observable,dim,full_dim,obs_err
+far bulk (2-H mol),5,4984,0.000e+00
+far bulk (3-H mol),16,4984,0.000e+00
+radical proton,139,4984,0.000e+00
+all protons (global),158,4984,0.000e+00

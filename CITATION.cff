@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use RestrictedSpinDynamics.jl in your research, please cite it."
+title: "RestrictedSpinDynamics.jl"
+abstract: >-
+  A Julia package for restricted spin-density-matrix (SSR) simulation of open-system
+  NMR spin dynamics. The density matrix is expanded in a product-operator string basis
+  (Pauli strings for spin-1/2, irreducible spherical tensors for higher spin) truncated
+  by correlation order (grade), the Lindblad Liouvillian is assembled as a sparse
+  superoperator, and it is propagated matrix-free with Krylov expv, reaching multi-spin
+  ensembles (superradiance/RASER, SABRE, ZULF, INEPT) that are infeasible in full
+  Liouville space.
+type: software
+authors:
+  - given-names: Seth
+    family-names: Dilday
+    email: sadilday@ncsu.edu
+version: "0.9.0"
+date-released: "2026-09-29"
+license: MIT
+repository-code: "https://github.com/sadilday/RestrictedSpinDynamics.jl"
+url: "https://sadilday.github.io/RestrictedSpinDynamics.jl"
+keywords:
+  - NMR
+  - spin dynamics
+  - open quantum systems
+  - Lindblad master equation
+  - Nakajima-Zwanzig
+  - RASER
+  - zero-field NMR
+  - Julia

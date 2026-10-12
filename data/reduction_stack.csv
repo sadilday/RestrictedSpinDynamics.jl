@@ -1,0 +1,5 @@
+# reduction stack for the radical-proton observable on the TEMPOL-like mixture (full grade-3 = 4984)
+stage,dim
+full grade-3,4984
++ observable-informed,139
++ fold electron,16

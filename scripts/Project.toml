@@ -1,0 +1,6 @@
+[deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+RestrictedSpinDynamics = "494a7345-c7b0-4aad-8175-caf91c12eacf"
+WignerSymbols = "9f57e263-0b3d-5e2e-b1be-24f2bb48858b"

@@ -1,0 +1,27 @@
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+/docs/build/
+/docs/site/
+*.swp
+*~
+
+# agent/assistant context + editor config - local only; collaborators bring their own
+CLAUDE.md
+AGENTS.md
+.claude/
+.vscode/
+
+# generated figures / outputs from scripts (keep code, not renders)
+scripts/**/*.pdf
+scripts/**/*.png
+scripts/**/*.jpg
+scripts/*.pdf
+scripts/*.png
+
+# logs and transient overnight-run data (regenerable; keep result CSVs)
+*.log
+data/zompd_gradesweep/
+data/zompd_gradesweep_literatureJ/
+data/zompd_overnight/
+data/zompd_spectrum/

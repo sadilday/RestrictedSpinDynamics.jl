@@ -1,0 +1,57 @@
+<!-- Source for the relaxation reduction ladder embedded in docs/src/relaxation_backends.md.
+     Hand-authored SVG (edit this file directly; no build step). Two axes kept apart:
+     each BOX carries the basis it is written in (none / H0 eigenbasis / Zeeman eigenbasis);
+     each ARROW carries the approximation added. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 520" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#6B7480"/>
+    </marker>
+  </defs>
+
+  <!-- opaque card so dark text stays readable on any doc theme -->
+  <rect x="1" y="1" width="618" height="518" rx="14" fill="#ffffff" stroke="#E2E6EC" stroke-width="1"/>
+
+  <!-- ===== Box 1: stochastic Liouville ===== -->
+  <rect x="40" y="58" width="540" height="66" rx="10" fill="#F6F8FB" stroke="#7A8699" stroke-width="1.6"/>
+  <text x="62" y="88" font-size="17" font-weight="bold" fill="#1A2330">Stochastic Liouville</text>
+  <text x="62" y="110" font-size="13.5" fill="#5A6676" font-family="SFMono-Regular, Consolas, monospace">sle &#183; exact classical bath</text>
+  <rect x="446" y="79" width="118" height="24" rx="12" fill="#E6F0F8" stroke="#BBD5EB" stroke-width="1"/>
+  <text x="505" y="95" text-anchor="middle" font-size="12" font-weight="bold" fill="#0B5C94">no eigenbasis</text>
+
+  <!-- arrow 1 -->
+  <line x1="310" y1="124" x2="310" y2="176" stroke="#6B7480" stroke-width="2.2" marker-end="url(#ah)"/>
+  <rect x="200" y="138" width="220" height="24" rx="6" fill="#ffffff"/>
+  <text x="310" y="154" text-anchor="middle" font-size="12.5" fill="#3A4450">eliminate bath &#183; Born-Markov</text>
+
+  <!-- ===== Box 2: Bloch-Redfield ===== -->
+  <rect x="40" y="176" width="540" height="66" rx="10" fill="#F6F8FB" stroke="#7A8699" stroke-width="1.6"/>
+  <text x="62" y="206" font-size="17" font-weight="bold" fill="#1A2330">Bloch-Redfield</text>
+  <text x="62" y="228" font-size="13.5" fill="#5A6676" font-family="SFMono-Regular, Consolas, monospace">redfield_jumps &#183; 2nd order, Markovian</text>
+  <rect x="436" y="197" width="128" height="24" rx="12" fill="#E7F1E8" stroke="#BEDCC2" stroke-width="1"/>
+  <text x="500" y="213" text-anchor="middle" font-size="12" font-weight="bold" fill="#1B6B3A">H&#8320; eigenbasis</text>
+
+  <!-- arrow 2 -->
+  <line x1="310" y1="242" x2="310" y2="294" stroke="#6B7480" stroke-width="2.2" marker-end="url(#ah)"/>
+  <rect x="188" y="256" width="244" height="24" rx="6" fill="#ffffff"/>
+  <text x="310" y="272" text-anchor="middle" font-size="12.5" fill="#3A4450">truncate non-secular &#183; &#948;&#969; &#8811; R</text>
+
+  <!-- ===== Box 3: Davies secular ===== -->
+  <rect x="40" y="294" width="540" height="66" rx="10" fill="#F6F8FB" stroke="#7A8699" stroke-width="1.6"/>
+  <text x="62" y="324" font-size="17" font-weight="bold" fill="#1A2330">Davies Secular</text>
+  <text x="62" y="346" font-size="13.5" fill="#5A6676" font-family="SFMono-Regular, Consolas, monospace">davies_jumps &#183; thermalized Lindblad</text>
+  <rect x="436" y="315" width="128" height="24" rx="12" fill="#E7F1E8" stroke="#BEDCC2" stroke-width="1"/>
+  <text x="500" y="331" text-anchor="middle" font-size="12" font-weight="bold" fill="#1B6B3A">H&#8320; eigenbasis</text>
+
+  <!-- arrow 3 -->
+  <line x1="310" y1="360" x2="310" y2="412" stroke="#6B7480" stroke-width="2.2" marker-end="url(#ah)"/>
+  <rect x="176" y="374" width="268" height="24" rx="6" fill="#ffffff"/>
+  <text x="310" y="390" text-anchor="middle" font-size="12.5" fill="#3A4450">reframe &#183; H&#8320; = Zeeman (high field)</text>
+
+  <!-- ===== Box 4: Zeeman-secular ladder ===== -->
+  <rect x="40" y="412" width="540" height="66" rx="10" fill="#F6F8FB" stroke="#7A8699" stroke-width="1.6"/>
+  <text x="62" y="442" font-size="17" font-weight="bold" fill="#1A2330">Zeeman-Secular Ladder</text>
+  <text x="62" y="464" font-size="13.5" fill="#5A6676" font-family="SFMono-Regular, Consolas, monospace">Solomon / CSA / scalar &#183; closed forms</text>
+  <rect x="408" y="433" width="156" height="24" rx="12" fill="#F2E9F4" stroke="#DCC6E4" stroke-width="1"/>
+  <text x="486" y="449" text-anchor="middle" font-size="12" font-weight="bold" fill="#6E2E86">Zeeman eigenbasis</text>
+</svg>

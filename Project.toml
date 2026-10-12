@@ -1,0 +1,29 @@
+name = "RestrictedSpinDynamics"
+uuid = "494a7345-c7b0-4aad-8175-caf91c12eacf"
+version = "0.9.0"
+authors = ["Seth Dilday <sadilday@ncsu.edu>"]
+
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+ExponentialUtilities = "d4d017d3-3776-5f7e-afef-a10c40355c18"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[compat]
+CUDA = "6.2.0"
+ExponentialUtilities = "1.30.1"
+FFTW = "1.10.0"
+KrylovKit = "0.10.4"
+LinearAlgebra = "1.12.0"
+Random = "1.11.0"
+SparseArrays = "1.12.0"
+julia = "1.12"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

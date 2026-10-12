@@ -1,0 +1,35 @@
+/* Use more of the viewport on wide screens. Documenter caps the content column at 52rem (both the
+   .docs-main container and the inner article), which leaves the right half of a wide window empty and
+   forces wide tables and figures to scroll. Let .docs-main fill the space beside the ~20rem sidebar,
+   then center the article at ~3/4 of that width so the measure stays readable without hugging the left.
+   Scoped to the desktop layout (>= 1056px) so the mobile/collapsed-sidebar layout is unaffected. */
+@media screen and (min-width: 1056px) {
+    #documenter .docs-main {
+        max-width: calc(100vw - 20rem);
+    }
+    #documenter .docs-main > article {
+        max-width: calc(0.75 * (100vw - 20rem));
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* Shrink the repeated Theory / Equation / Code subsubheadings used across the guide pages to a bold
+   label roughly two points larger than body text, with tight spacing. This keeps the triad structure
+   without inflating page length. Targeted by heading id (Documenter derives the id from the heading
+   text: "Theory", "Theory-2", ...), so substantive ### subsections keep their normal heading size. */
+article h3[id^="Theory"],
+article h3[id^="Equation"],
+article h3[id^="Code"] {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-top: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Center standalone figures in the article (block images sit in the middle of the measure
+   rather than hugging the left). */
+#documenter article img {
+    display: block;
+    margin-inline: auto;
+}
