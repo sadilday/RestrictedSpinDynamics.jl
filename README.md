@@ -2,7 +2,7 @@
 
 [![Docs (dev)](https://img.shields.io/badge/docs-dev-blue.svg)](https://sadilday.github.io/RestrictedSpinDynamics.jl/dev)
 [![CI](https://github.com/sadilday/RestrictedSpinDynamics.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/sadilday/RestrictedSpinDynamics.jl/actions/workflows/CI.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](LICENSE)
 
 Restricted state-space simulation of open-system NMR spin dynamics in Julia. The density matrix is
 expanded in a grade-truncated Pauli-string basis and the Lindblad Liouvillian is propagated
