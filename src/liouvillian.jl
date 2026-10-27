@@ -52,6 +52,43 @@ function _dissipator_column!(I, J, V, basis, L::AbstractDict, rate, α, pα)
 end
 
 """
+    orbit_dissipator(basis, L1, rate, class) -> sparse superoperator
+
+The permutation-symmetric sum `Σ_{s∈class} rate·D[L_s]` of an identical single-site jump `L1` (built on **site
+1**, e.g. `spin_pm(N,1,+1)` or `spin_op(N,1,3)`) translated across `class`, assembled in O(dim·|class| + dim·canon)
+instead of the O(|class|·dim·canon) of handing `build_liouvillian` `|class|` separate jumps, the fix for the
+large-N assembly blowup (the per-site canon cost scaled as O(N²) on the sparse N>64 path).
+
+Requires a symmetry-adapted `basis` (`basis.sym`, a [`SpinClasses`](@ref) over the identical spins). Per column
+it groups the class sites by their local operator in that string: sites sharing a local operator map a jump to
+the same orbit, so the `|class|` jumps collapse to ≤4 `canon`/[`lookup_sym`](@ref) lookups (one per
+I/X/Y/Z group), weighted by the group size. Exact; it matches the many-jump `build_liouvillian` to machine
+precision (the gate); the speedup (flat in N, vs O(N²)) is the point. Add the result to the rest of the
+Liouvillian: `L = build_liouvillian(basis, H; jumps=non_identical) + orbit_dissipator(basis, spin_pm(N,1,+1), w, 1:N)`.
+"""
+function orbit_dissipator(basis::RestrictedBasis, L1::AbstractDict, rate::Real, class::AbstractVector{<:Integer})
+    basis.sym === nothing && throw(ArgumentError(
+        "orbit_dissipator needs a symmetry-adapted basis (SpinClasses over the identical spins)"))
+    xlate(p, s) = setsite(setsite(p, 1, 0), s, getsite(p, 1))   # move the site-1 support of L1 to site s
+    Lsite = Dict(s => Dict(xlate(p, s) => c for (p, c) in L1) for s in class)
+    Iv = Int[]; Jv = Int[]; Vv = ComplexF64[]
+    counts = Dict{Int,Int}(); rep = Dict{Int,Int}()
+    for α in 1:length(basis)
+        pα = basis.labels[α]
+        empty!(counts); empty!(rep)
+        for s in class                                          # group class sites by local operator in pα
+            v = getsite(pα, s)
+            counts[v] = get(counts, v, 0) + 1
+            haskey(rep, v) || (rep[v] = s)
+        end
+        for (v, cnt) in counts                                  # ≤4 groups -> ≤4 canon lookups, size-weighted
+            _dissipator_column!(Iv, Jv, Vv, basis, Lsite[rep[v]], rate * cnt, α, pα)
+        end
+    end
+    return sparse(Iv, Jv, Vv, length(basis), length(basis))
+end
+
+"""
     check_sector_closure(basis, H, jumps)
 
 Verify the dynamics (`H` + `jumps`) preserve `basis.sector`, so restricting to it stays exact. No-op for an
@@ -260,4 +297,152 @@ function build_liouvillian(basis::RestrictedBasis{<:AbstractIndex,P}, H::Abstrac
         end
     end
     return sparse(I, J, V, n, n)
+end
+
+"""
+    boson_moment_generator(basis, H; jumps) -> SparseMatrixCSC{ComplexF64}
+
+Adjoint (Heisenberg) moment generator `G` for a bosonic [`restricted_basis`](@ref) (`boson = true`):
+`dm/dt = G m`, where `m_α = ⟨basis.labels[α]⟩` is the vector of monomial moments. For each monomial
+`O_α` it assembles the adjoint Lindbladian
+
+    𝓛†O_α = i[H, O_α] + Σⱼ rateⱼ ( Lⱼ† O_α Lⱼ − ½ {Lⱼ†Lⱼ, O_α} )
+
+and decomposes it back onto the basis. Monomials of grade > `kmax` are dropped on lookup; that is the
+**moment closure**, a semi-convergent truncation, NOT the exact density-matrix truncation that
+[`build_liouvillian`](@ref) performs for the (finite, self-dual) spin bases. `H` and each jump `Lⱼ` are
+[`BosonDict`](@ref)s; `jumps` is a vector of `(L, rate)`.
+
+!!! warning "Experimental"
+    Bosonic CV companion to the spin engine. The grade truncation here is an approximate moment closure,
+    exact only when the operator algebra closes at grade ≤ `kmax`.
+"""
+function boson_moment_generator(basis::RestrictedBasis{<:AbstractIndex,BosonLabel},
+                                H::AbstractDict{BosonLabel,ComplexF64};
+                                jumps = Tuple{BosonDict,Float64}[])
+    N = basis.N
+    Hb = BosonDict(H)
+    jumps_prep = [(BosonDict(L), bop_dag(BosonDict(L)),
+                   bop_mult(bop_dag(BosonDict(L)), BosonDict(L), N), float(rate)) for (L, rate) in jumps]
+    n = length(basis)
+    I = Int[]; J = Int[]; V = ComplexF64[]
+    for (α, Oα) in enumerate(basis.labels)
+        one = BosonDict(Oα => 1.0 + 0im)
+        for (r, c) in bop_comm(Hb, one, N)                 # i[H, O]
+            γ = lookup(basis, r); γ == 0 && continue
+            push!(I, α); push!(J, γ); push!(V, im * c)
+        end
+        for (Lop, Ldg, LtL, rate) in jumps_prep
+            for (r, c) in bop_mult(bop_mult(Ldg, one, N), Lop, N)   # L† O L
+                γ = lookup(basis, r); γ == 0 && continue
+                push!(I, α); push!(J, γ); push!(V, rate * c)
+            end
+            for (r, c) in bop_acomm(LtL, one, N)                    # {L†L, O}
+                γ = lookup(basis, r); γ == 0 && continue
+                push!(I, α); push!(J, γ); push!(V, -0.5 * rate * c)
+            end
+        end
+    end
+    return sparse(I, J, V, n, n)
+end
+
+"""
+    spinboson_moment_generator(basis, H; jumps) -> SparseMatrixCSC{ComplexF64}
+
+Adjoint (Heisenberg) moment generator `G` for a mixed spin-boson [`restricted_basis`](@ref)
+(`spinboson = true`): `dm/dt = G m`, `m_α = ⟨basis.labels[α]⟩` over mixed monomials
+`(spin ladder) ⊗ a†^m a^n`. Same adjoint-Lindbladian assembly as [`boson_moment_generator`](@ref), using
+the mixed product (`ladder_mult × boson_mult`) with the basis's spin count (`basis.N`) and mode count
+(`basis.radix[1]`). `H` and each jump are [`SpinBosonDict`](@ref)s (build them with `sb_sigma_*`,
+`sb_create`/`sb_destroy`, and `sbop_mult` for the Tavis-Cummings coupling `a†σ⁻ + aσ⁺`). Grade > `kmax`
+drops on lookup = moment closure; the excitation sector `sbweight` is conserved by the coherent part, so a
+number-conserving `H` yields a generator block-diagonal in `sbweight`.
+
+!!! warning "Experimental"
+    Mixed CV-DV companion to the spin engine; the grade truncation is an approximate moment closure.
+"""
+function spinboson_moment_generator(basis::RestrictedBasis{<:AbstractIndex,SpinBosonLabel},
+                                    H::AbstractDict{SpinBosonLabel,ComplexF64};
+                                    jumps = Tuple{SpinBosonDict,Float64}[])
+    ns = basis.N
+    nm = isempty(basis.radix) ? 1 : basis.radix[1]
+    Hb = SpinBosonDict(H)
+    jumps_prep = [(SpinBosonDict(L), sbop_dag(SpinBosonDict(L)),
+                   sbop_mult(sbop_dag(SpinBosonDict(L)), SpinBosonDict(L), ns, nm), float(rate)) for (L, rate) in jumps]
+    n = length(basis)
+    I = Int[]; J = Int[]; V = ComplexF64[]
+    for (α, Oα) in enumerate(basis.labels)
+        one = SpinBosonDict(Oα => 1.0 + 0im)
+        for (r, c) in sbop_comm(Hb, one, ns, nm)                     # i[H, O]
+            γ = lookup(basis, r); γ == 0 && continue
+            push!(I, α); push!(J, γ); push!(V, im * c)
+        end
+        for (Lop, Ldg, LtL, rate) in jumps_prep
+            for (r, c) in sbop_mult(sbop_mult(Ldg, one, ns, nm), Lop, ns, nm)   # L† O L
+                γ = lookup(basis, r); γ == 0 && continue
+                push!(I, α); push!(J, γ); push!(V, rate * c)
+            end
+            for (r, c) in sbop_acomm(LtL, one, ns, nm)                          # {L†L, O}
+                γ = lookup(basis, r); γ == 0 && continue
+                push!(I, α); push!(J, γ); push!(V, -0.5 * rate * c)
+            end
+        end
+    end
+    return sparse(I, J, V, n, n)
+end
+
+"""
+    moment_expect(basis, m, O) -> ComplexF64
+
+Expectation of an observable `O` (a [`BosonDict`](@ref) / [`SpinBosonDict`](@ref), matching the basis label
+type) against a moment vector `m` from a moment generator: `⟨O⟩ = Σ coeff · m[lookup(basis, monomial)]`.
+Monomials of `O` outside the grade-truncated `basis` are dropped (consistent with the moment closure). The
+moment-picture companion of [`expect`](@ref); compose `O` with [`bop_mult`](@ref) / [`sbop_mult`](@ref) (e.g.
+`a†a†aa` for `g₂`, or `p†p` for a [`polariton`](@ref) number).
+
+!!! warning "Experimental"
+    Bosonic/mixed moment-hierarchy readout; the usual moment-closure caveat applies.
+"""
+function moment_expect(basis::RestrictedBasis, m::AbstractVector, O::AbstractDict)
+    s = zero(ComplexF64)
+    for (p, c) in O
+        i = lookup(basis, p)
+        i == 0 && continue
+        s += c * m[i]
+    end
+    return s
+end
+
+"""
+    normal_modes(basis, G; weight = -1, squeezing = false) -> (; values, frequencies, linewidths, vectors, labels)
+
+Dissipative normal modes of a bosonic moment generator `G`: the eigen-decomposition of its first-moment
+(grade-1) drift block. For coupled modes these are the hybridized normal modes: for a cavity plus a
+Holstein-Primakoff-bosonized collective spin, the **polaritons**. Each eigenvalue `λ = -Γ/2 - iω` gives a
+mode's frequency `ω = -imag(λ)` and linewidth `Γ = -2·real(λ)`, the inherited loss and inter-mode
+cross-damping made explicit; the eigenvectors are the Bogoliubov / Hopfield compositions over the bare
+operators in `labels`.
+
+- `squeezing = false` (default): the passive (particle-conserving, beam-splitter) transform on the single
+  `weight` sector (default `-1`, the annihilation operators `a`).
+- `squeezing = true`: the active (Bogoliubov-de-Gennes) transform on the doubled `±1` block `{a, a†}`, for
+  counter-rotating / squeeze (`a†²`, `a²`) dynamics that mixes the sectors. Modes come in particle-hole `±`
+  pairs and the eigenvectors are the full `(u, v)` Bogoliubov coefficients; the frequency softens toward a
+  parametric instability.
+
+Boson generators only: for spin-boson polaritons, bosonize the collective spin into a mode
+(Holstein-Primakoff, valid at low excitation) and pass the multi-mode boson generator; the native
+hard-core-spin grade-1 block routes its coupling through `⟨σz⟩` at grade 2 and is not the polariton drift.
+
+!!! warning "Experimental"
+"""
+function normal_modes(basis::RestrictedBasis{<:AbstractIndex,BosonLabel}, G; weight::Int = -1,
+                      squeezing::Bool = false)
+    keep = squeezing ? (p -> bgrade(p) == 1 && abs(bweight(p)) == 1) :
+                       (p -> bgrade(p) == 1 && bweight(p) == weight)
+    idx = [α for (α, p) in enumerate(basis.labels) if keep(p)]
+    isempty(idx) && error("normal_modes: no grade-1 monomials in the requested sector")
+    F = eigen(Matrix(G[idx, idx]))
+    return (; values = F.values, frequencies = -imag.(F.values), linewidths = -2 .* real.(F.values),
+            vectors = F.vectors, labels = basis.labels[idx])
 end

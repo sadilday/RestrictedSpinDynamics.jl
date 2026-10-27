@@ -20,6 +20,10 @@ well as here.
 | Area | Experimental symbols | Note |
 |:------|:----------------------|:------|
 | **Feedback analysis** | [`linearize`](@ref), [`fixed_point`](@ref), [`feedback_threshold`](@ref) | Hermitian case, dense, small-system tools |
+| **Control / GRAPE frontier** | [`ParametricDrive`](@ref)/[`parametric_drive`](@ref) | parametric (CRAB) pulse shapes: a few optimizable envelope parameters in place of one amplitude per interval. The control core is scope-limited stable (below) |
+| **Time-dependent MHE** (`Inference` submodule) | the `Modulation` method of [`moving_horizon`](@ref RestrictedSpinDynamics.Inference.moving_horizon) (the `MovingHorizonTD` filter) | recursive state estimation under a time-dependent generator, re-forming the window propagation each step. The LTI MHE and the fitting surface are scope-limited stable (below) |
+| **Classical-vs-quantum** (`Inference` submodule) | [`leggett_garg`](@ref RestrictedSpinDynamics.Inference.leggett_garg) | Leggett-Garg macrorealism test: two-time regression correlators -> `K3 = C12 + C23 - C13`, classical bound `K3 ≤ 1`, quantum Lüders bound `3/2`; decoherence drives K3 below 1 (quantum-to-classical transition). Bayesian wrapper reports `P(K3 > 1)`. Assumes noninvasive measurability (ideal regression correlator; the projective "clumsiness" loophole is not addressed) |
+| **Line estimation** (`Inference` submodule) | [`hsvd`](@ref RestrictedSpinDynamics.Inference.hsvd) | direct Hankel-SVD / matrix-pencil line estimator: seed-free frequencies, damping, and complex amplitudes from an FID (an eigendecomposition, no cost function), the non-iterative front end that seeds a structural [`fit`](@ref RestrictedSpinDynamics.Inference.fit) where the oscillatory time-domain least-squares is multimodal |
 | **Observability verdicts** | [`stabilizable`](@ref), [`detectable`](@ref), [`zero_track_elimination`](@ref) `:dual`/`:importance` | the default `:amplitude` ZTE path is stable |
 | **Readout & noise** | [`spectrum`](@ref)/[`peaks`](@ref), [`nyquist_sigma`](@ref)/[`add_detection_noise`](@ref)/[`add_detection_noise_real`](@ref) | deterministic post-processing, no unit-test gate yet |
 | **Post-Markovian ME** | [`pome`](@ref), [`POME`](@ref) | exponential memory kernel only; CP not guaranteed for all `γ` |
@@ -38,6 +42,16 @@ secular coupling forms, region selection, the 1D-irrep symmetry path, the therma
 leading order in `β`), and each relaxation backend's validity window) are fully supported but carry a
 physical/usage caveat, documented at each symbol's docstring where it is read in context rather than
 duplicated here.
+
+The **control and inference core** (v0.9.1) is scope-limited stable. The GRAPE optimizer `control`,
+`ControlProblem`, `control_gradient`, `grape` with the `MaximizeExpectation`, `StateOverlap`, `TrajectoryFit`
+objectives and `Actuator`/`actuator` hold for control-affine systems (Selective, state-dependent drives are
+unsupported). The FID fitting and uncertainty surface `fit`, `uncertainty` with `flat_prior` (null-space regularization of
+the flat Fisher directions), `multistart`, `info_criteria`, `fit_report` with the spec types `Condition`,
+`GaussianPrior`, `info_prior`, `Separable`, the `cost`, `loglik`, `residuals` accessors, and `noise_weights`
+(inverse-variance weights estimated from a signal-free FID tail) hold for Gaussian detection noise (`rss`/`nobs`
+are derived from `residuals`, not exported). The state estimators `tomography`, `smooth`, the LTI
+`moving_horizon`, and `step!` share that scope. Reached as `RestrictedSpinDynamics.Inference.*` (namespaced, not re-exported).
 
 ## Naming Convention (v1)
 

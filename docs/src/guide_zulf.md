@@ -124,14 +124,13 @@ one-bond coupling `1J(15N,1H) = -73.3 Hz`, from which every other coupling follo
 relation `J(X,Y) = J0 (γX γY)/(γ15N γ1H)`. Each ion is prepared in proton order and read out at zero field as
 the OPM signal `Σ γ_i ⟨Iz_i⟩`; its Fourier transform is the J-spectrum.
 
-![Zero-field ZULF J-spectra of the ammonium isotopologues (15NH4+, 14NH4+, 15NH3D+, and 15NH2D2+) stacked on a shared zero-field frequency axis, each showing a distinct multiplet fingerprint set by its nitrogen isotope and deuteration](assets/validation/zulf_ammonium.png)
+![Zero-field ZULF J-spectra of four ammonium isotopologues, stacked on a shared frequency
+axis.](assets/validation/zulf_ammonium.png)
 
-Each isotopologue carries a fingerprint set by its symmetry and spins. The fully symmetric `15NH4+` (four
-equivalent protons on a spin-1/2 nitrogen) is dominated by a single line near `2.5|J|`. Replacing `15N` with
-spin-1 `14N` moves and splits the pattern toward `2|J|` and `3|J|`, and each deuteration lowers the proton
-symmetry and adds the smaller `N-D` and `H-D` couplings, so `15NH3D+` and `15NH2D2+` break into progressively
-richer multiplets. The spin-1 `14N` and `2H` route automatically to the higher-spin tensor basis, and the
-spectra are exact (full grade).
+Each isotopologue's fingerprint is set by its symmetry and spins. Fully symmetric `15NH4+` shows a single line
+near `2.5|J|`; spin-1 `14N` moves and splits it toward `2|J|` and `3|J|`; each deuteration lowers the proton
+symmetry and adds smaller `N-D`/`H-D` couplings, so `15NH3D+` and `15NH2D2+` grow richer multiplets. The spin-1
+nuclei route to the higher-spin tensor basis; the spectra are exact (full grade).
 
 The worked computation takes one isotopologue (`15NH3D+`). A vector OPM records all three local components. At
 zero field the coupling is isotropic: with proton z-order only Mz oscillates (the J-spectrum) and the
@@ -172,10 +171,16 @@ Each spectrum is `abs.(rfft(·))`. At zero field `sz` holds the J-spectrum and t
 zero. At ultralow field the transverse pair coincide (circular precession about the guiding field), so the
 figure plots their magnitude `sqrt(Mx^2 + My^2)` over the longitudinal `Mz`:
 
-![Ultralow-field vector readout of three ammonium isotopologues (15NH4+, 14NH4+, 14NH2D2+), one panel each over a shared 0 to 250 Hz axis: the transverse magnitude sqrt(Mx^2 + My^2) carries the proton-Larmor multiplet split by J, and the longitudinal Mz a distinct lower set of lines; the structure grows richer from the symmetric 15NH4+ through spin-1 14N to the doubly deuterated 14NH2D2+](assets/validation/zulf_ammonium_vector.png)
+![Ultralow-field vector readout of three ammonium
+isotopologues.](assets/validation/zulf_ammonium_vector.png)
+
+Vector readout, one panel per isotopologue (15NH4+, 14NH4+, 14NH2D2+) over 0 to 250 Hz. The transverse
+magnitude sqrt(Mx^2 + My^2) carries the J-split proton-Larmor multiplet; longitudinal Mz carries a distinct
+lower set. The structure grows richer from 15NH4+ through spin-1 14N to 14NH2D2+.
 
 The two figures and their data (`data/zulf_spectra/ammonium.csv` for the zero-field series and
-`ammonium_vector.csv` for the vector readout) back the two panels above.
+`ammonium_vector.csv` for the vector readout) are produced by the ammonium ZULF script in the repository's
+`scripts/` tree.
 
 ## Strong Collective Coupling
 

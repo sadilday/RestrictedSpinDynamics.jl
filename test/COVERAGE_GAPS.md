@@ -128,3 +128,33 @@ has no symmetry adaptation or reachability pruning.
 - **GPU single-trajectory** (`propagate_gpu` / core `backend=:gpu`) is reached only via `propagate_ensemble`
   and is CUDA-gated (`@test_skip` with no device), so GPU is effectively untested in CI by design. Track
   separately if a CI runner with a device becomes available.
+
+## Inference & Control edge/stress (v0.9.1)
+
+Ten edge/stress tests added for the v0.9.1 Inference & Control surface (property/invariant style; see the
+named `@testset`s in each file). All green.
+
+- **Fitting / uncertainty** (`test_fitting.jl`):
+  - CRB reparameterization covariance: rescaling the unit terms by α transforms `F -> α²F`, `stderr -> stderr/α`.
+  - Jacobian `:forward`/`:frechet`/`:findiff` agreement at an ill-conditioned (near-degenerate dephasing) point.
+  - VARPRO near-coincident lines: 3-Hz split (`~1.5/T_acq`) recovered without a singular throw, looser accuracy.
+- **Moving-horizon estimation** (`test_mhe.jl`):
+  - Recursive `step!` (full window, `Q -> 0`) equals the batch `smooth` terminal state (`< 1e-3`) - arrival-cost correctness.
+  - Information stays symmetric PSD and finite over 300 steps (no drift / blow-up).
+- **Line estimation** (`test_line_estimate.jl`):
+  - Super-resolution: a 0.5-Hz split (`0.25/T_acq`) is resolved at high SNR and lost at low SNR. NOTE: parametric
+    (matrix-pencil) estimators are NOT Fourier-limited - the floor is SNR, not `1/T_acq` (original premise corrected).
+  - Single-line (order 1) and unstable (growing, `|z| > 1`, negative damping) poles recovered.
+- **Control / GRAPE** (`test_control.jl`):
+  - Adjoint == central-FD cross-product: StateOverlap & TrajectoryFit through the actuator and ParametricDrive chains.
+  - Exact (`:frechet`) trajectory physicality: trace preserved + single-spin Bloch marginals in the unit ball.
+- **Leggett-Garg** (`test_leggett_garg.jl`):
+  - A coupled hidden (aux) mode drives K3 from the Lüders 3/2 down through the classical bound; `g -> 0` recovers
+    the bare single-spin value exactly (the physical content of the Markovian/QRT caveat).
+
+Findings surfaced (not test bugs):
+- `:first_order` GRAPE forward propagation is only an `O(dt²)` product-formula approximation and can give a
+  single-spin `|r|` slightly > 1 at the optimum; the exact `:frechet` path stays physical. A Magnus-2 / CFQM
+  correction would tighten the cheap path (candidate v1.1 control item).
+- The `Actuator` `bounds=(lo,hi)` field does not act as a forward-pass clamp (an out-of-bounds command does not
+  zero the realized-drive gradient); its semantics (optimizer box vs forward clip) are worth clarifying.

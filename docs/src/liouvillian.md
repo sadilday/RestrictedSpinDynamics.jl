@@ -20,6 +20,32 @@ Pages = ["liouvillian.jl"]
 Private = false
 ```
 
+## The Adjoint and Trace Duality
+
+An expectation value can be read off in either of two pictures, linked by the trace (Hilbert-Schmidt) pairing
+``\langle A, B\rangle = \operatorname{Tr}(A^\dagger B)``:
+
+```math
+\langle O\rangle(t) = \operatorname{Tr}\!\big(O\,\rho(t)\big)
+= \operatorname{Tr}\!\big(O\,e^{t\mathcal{L}}\rho(0)\big)
+= \operatorname{Tr}\!\big((e^{t\mathcal{L}^\dagger}O)\,\rho(0)\big),
+```
+
+since ``\operatorname{Tr}(O\,\mathcal{L}\rho) = \operatorname{Tr}((\mathcal{L}^\dagger O)\,\rho)``. The
+**forward** problem evolves the state ``\rho`` under ``\mathcal{L}`` (the Schrodinger picture); the
+**backward** problem evolves the observable ``O`` under the adjoint ``\mathcal{L}^\dagger`` (the Heisenberg
+picture). Both return the same number.
+
+[`build_liouvillian`](@ref) assembles ``\mathcal{L}``, the forward generator that [`propagate`](@ref) steps.
+Its adjoint ``\mathcal{L}^\dagger = i[H,\cdot] + \sum_j r_j\,(L_j^\dagger\,\cdot\,L_j -
+\tfrac12\{L_j^\dagger L_j,\cdot\})`` is the backward generator, and it is what several surfaces assemble or run
+directly:
+
+- the GRAPE control adjoint, one forward state sweep paired with one backward costate sweep to give every
+  parameter gradient (see [Control and Pulse Optimization](@ref));
+- the reachable (input) and observable (output) sets, the same forward versus backward split applied to basis
+  selection (see [Reachability, Control, and the Adaptive Basis](@ref)).
+
 ## Leakage Across the Truncation Boundary
 
 Grade projection makes the effective ``\mathcal{L}`` **non-normal** and discards flow across the truncation

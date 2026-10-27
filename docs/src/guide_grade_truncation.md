@@ -52,7 +52,11 @@ space grows exponentially in ``N`` with a base that rises faster still, so the r
 exactly where the spin is highest, even as the grade needed to reach the floor tends to climb with the spin
 manifold.
 
-![Grade-truncated basis dimension (solid) versus the full (d^N)^2 Liouville space (dashed), for spin-1/2 through spin-2; the cutoff is k_max=3 for spin-1/2 and spin-1 and climbs with the spin-manifold dimension for higher spin, while the restricted basis stays polynomial in N throughout](assets/figures/f1_basis_scaling.png)
+![Grade-truncated basis dimension versus the full Liouville space.](assets/figures/f1_basis_scaling.png)
+
+Grade-truncated basis dimension (solid) versus the full (d^N)^2 Liouville space (dashed), spin-1/2 through
+spin-2. The cutoff is k_max = 3 for spin-1/2 and spin-1 and climbs for higher spin; the restricted basis stays
+polynomial in N.
 
 ## The Gaussian Level
 

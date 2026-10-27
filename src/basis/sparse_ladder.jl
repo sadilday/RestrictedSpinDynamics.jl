@@ -108,7 +108,7 @@ end
     ladder_mult(p::SparseLadderLabel, q::SparseLadderLabel, N) -> SparseLadderDict
 
 Sparse twin of the ladder product: a SUM of strings (empty dict = zero). Merges the two ascending site
-lists; at each occupied site applies the single-site table `_LADDER_T`; identity-on-both sites pass
+lists; at each occupied site applies the single-site ladder product table; identity-on-both sites pass
 through (not visited). Reproduces the tableau `ladder_mult` restricted to the union of occupied sites.
 """
 function ladder_mult(p::SparseLadderLabel{C}, q::SparseLadderLabel{C}, N::Int) where {C}

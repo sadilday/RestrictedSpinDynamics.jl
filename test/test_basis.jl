@@ -234,4 +234,19 @@ end
     end
 end
 
+@testset "explicit-label basis + closed_under leakage guard" begin
+    # build from an explicit label set (manual truncation): identity auto-prepended, spin 2 excluded
+    b = restricted_basis(2, 1, [pauli_label(2, 1=>:x), pauli_label(2, 1=>:y), pauli_label(2, 1=>:z)])
+    @test basis_size(b) == 4                                   # {I, X1, Y1, Z1}
+    @test lookup(b, identity_label(b)) == 1                    # identity prepended
+    @test lookup(b, pauli_label(2, 2=>:z)) == 0                # spin 2 genuinely excluded
+    @test_throws ArgumentError restricted_basis(2, 1, [pauli_label(2,1=>:x), pauli_label(2,1=>:x)])  # duplicates
+    # closed_under: {Iz1, Iz2} is NOT closed under the J flip-flop -> boundary leakage -> throws
+    @test_throws ArgumentError restricted_basis(2, 1, [pauli_label(2,1=>:z), pauli_label(2,2=>:z)];
+        closed_under = hamiltonian(jcoupling(2, 1, 2, 1.0)))
+    # a full single-spin-1 Pauli set IS closed under that spin's own su(2) drive (no leakage -> no throw)
+    onespin = [pauli_label(2, 1=>a) for a in (:x, :y, :z)]
+    @test restricted_basis(2, 1, onespin; closed_under = hamiltonian(zeeman(2, [1.0, 0.0]))) isa RestrictedBasis
+end
+
 end

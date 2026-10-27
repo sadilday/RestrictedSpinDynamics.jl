@@ -117,7 +117,16 @@ partner, with its characteristic `sqrt(omega)` low-frequency dispersion, impleme
 Caravan, Ellison, McMurry, Lauffer, "Gadolinium(III) chelates as MRI contrast agents," Chem. Rev. 99, 2293
 (1999). The outer-sphere relaxivity lineage; [`outer_sphere_second_kind`](@ref) / [`outer_sphere_r1`](@ref)
 package the freely-diffusing case as a per-mM relaxivity, validated against the TEMPOL nitroxide NMRD
-profile across roughly eight decades of field.
+profile across roughly eight decades of field (`scripts/validation/validate_nitroxide_nmrd.jl`).
+
+## Electronic-Structure Inputs
+
+[Neese](@id ref-orca), "The ORCA program system," WIREs Comput. Mol. Sci. 2, 73 (2012).
+https://doi.org/10.1002/wcms.81; Neese, Wennmohs, Becker, Riplinger, "The ORCA quantum chemistry program
+package," J. Chem. Phys. 152, 224108 (2020). https://doi.org/10.1063/5.0004608. The DFT engine for the
+first-principles spin parameters used here: the scalar-coupling (SSCC) networks and GIAO isotropic shieldings
+behind the strychnine 2D NOESY J-network and ¹H shifts in [Benchmarks](benchmarks.md) and the DFT-derived
+couplings and shifts in [Reachability, Control, and the Adaptive Basis](@ref).
 
 ## SABRE and Chemical Exchange
 
@@ -183,3 +192,66 @@ eigenvalue condition number for a simple eigenvalue and diverging at an exceptio
 operator norm `‖P‖₂²` (not the Frobenius norm, which differ for a degenerate cluster) by
 [`RestrictedSpinDynamics.Spectral.petermann_factor`](@ref) and
 [`RestrictedSpinDynamics.Spectral.eigstructure`](@ref).
+
+## Fitting, Model Selection, and State Estimation
+
+[Golub, Pereyra](@id ref-varpro), "The differentiation of pseudo-inverses and nonlinear least squares problems
+whose variables separate," SIAM J. Numer. Anal. 10, 413 (1973). https://doi.org/10.1137/0710036;
+[Marquardt](@id ref-lm), "An algorithm for least-squares estimation of nonlinear parameters," J. Soc. Indust.
+Appl. Math. 11, 431 (1963). https://doi.org/10.1137/0111030. The nonlinear-least-squares methods behind
+[`fit`](@ref RestrictedSpinDynamics.Inference.fit): the Gauss-Newton / Levenberg-Marquardt step of the joint
+structural fit, and the separable variable-projection (VARPRO) fit
+([`Separable`](@ref RestrictedSpinDynamics.Inference.Separable), which concentrates the complex amplitudes out).
+
+[Barkhuijsen, de Beer, Bovée, van Ormondt](@id ref-hsvd), "Retrieval of frequencies, amplitudes, damping
+factors, and phases from time-domain signals using a linear least-squares procedure," J. Magn. Reson. 61, 465
+(1985). https://doi.org/10.1016/0022-2364(85)90187-8; Hua, Sarkar, "Matrix pencil method for estimating
+parameters of exponentially damped/undamped sinusoids in noise," IEEE Trans. Acoust. Speech Signal Process.
+38, 814 (1990). https://doi.org/10.1109/29.56027. The Hankel-SVD and matrix-pencil line estimators behind
+[`hsvd`](@ref RestrictedSpinDynamics.Inference.hsvd): form a Hankel matrix from the FID, take its signal
+subspace from the SVD, and read the poles off the subspace shift-invariance, recovering frequencies, damping,
+and amplitudes with no cost function and no starting guess. The seed-free front end that seeds
+[`fit`](@ref RestrictedSpinDynamics.Inference.fit).
+
+[Govindaraju, Young, Maudsley](@id ref-govindaraju), "Proton NMR chemical shifts and coupling constants for
+brain metabolites," NMR Biomed. 13, 129 (2000).
+https://doi.org/10.1002/1099-1492(200005)13:3%3C129::AID-NBM619%3E3.0.CO;2-V. The tabulated metabolite
+chemical shifts and `J`-couplings that LCModel and the related MRS basis sets are built from, the published
+ground truth against which [`hsvd`](@ref RestrictedSpinDynamics.Inference.hsvd) is validated on lactate in
+[Validation](validation.md).
+
+[Hoerl, Kennard](@id ref-ridge), "Ridge regression: biased estimation for nonorthogonal problems,"
+Technometrics 12, 55 (1970). https://doi.org/10.1080/00401706.1970.10488634. The L2 penalty that stabilizes an
+ill-conditioned least-squares estimate, equivalently a Gaussian prior on the parameters (Tikhonov
+regularization). [`GaussianPrior`](@ref RestrictedSpinDynamics.Inference.GaussianPrior) is its general form,
+and [`flat_prior`](@ref RestrictedSpinDynamics.Inference.flat_prior) ridges only the flat Fisher directions.
+
+[Akaike](@id ref-aic), "A new look at the statistical model identification," IEEE Trans. Automat. Control 19,
+716 (1974). https://doi.org/10.1109/TAC.1974.1100705; [Hurvich, Tsai](@id ref-aicc), "Regression and time
+series model selection in small samples," Biometrika 76, 297 (1989). https://doi.org/10.1093/biomet/76.2.297.
+The Akaike criterion and its small-sample correction (AICc), the model-selection scores of
+[`info_criteria`](@ref RestrictedSpinDynamics.Inference.info_criteria) that penalize extra parameters.
+
+[Rao](@id ref-crb), "Information and the accuracy attainable in the estimation of statistical parameters,"
+Bull. Calcutta Math. Soc. 37, 81 (1945); Kay, *Fundamentals of Statistical Signal Processing: Estimation
+Theory* (Prentice Hall, 1993), ISBN 978-0133457117; [Helstrom](@id ref-qfi), *Quantum Detection and Estimation
+Theory* (Academic Press, 1976), ISBN 978-0123400505; Braunstein, Caves, "Statistical distance and the geometry
+of quantum states," Phys. Rev. Lett. 72, 3439 (1994). https://doi.org/10.1103/PhysRevLett.72.3439. The
+Cramér-Rao bound and Fisher information. [`uncertainty`](@ref RestrictedSpinDynamics.Inference.uncertainty)
+evaluates the classical Fisher `F = Jacᵀ diag(1/σ²) Jac`, the Cramér-Rao bound for the specified measurement
+under Gaussian detection noise (Rao; Kay). The quantum Fisher information (Helstrom; Braunstein-Caves), the
+bound optimized over all measurements through the symmetric logarithmic derivative, is the ceiling above it,
+not what RSD evaluates.
+
+[Rao, Rawlings, Mayne](@id ref-mhe), "Constrained state estimation for nonlinear discrete-time systems:
+stability and moving horizon approximations," IEEE Trans. Automat. Control 48, 246 (2003).
+https://doi.org/10.1109/TAC.2002.808470. The moving-horizon estimator:
+[`smooth`](@ref RestrictedSpinDynamics.Inference.smooth) is one window, and
+[`moving_horizon`](@ref RestrictedSpinDynamics.Inference.moving_horizon) /
+[`step!`](@ref RestrictedSpinDynamics.Inference.step!) the recursive filter, with the arrival cost carrying the
+information from before the window.
+
+[Leggett, Garg](@id ref-leggett-garg), "Quantum mechanics versus macroscopic realism: is the flux there when
+nobody looks?," Phys. Rev. Lett. 54, 857 (1985). https://doi.org/10.1103/PhysRevLett.54.857. The Leggett-Garg
+inequality that [`leggett_garg`](@ref RestrictedSpinDynamics.Inference.leggett_garg) tests: a macrorealist
+bound on the three-time correlator `K3`, violated by coherent quantum evolution up to the Lüders bound.

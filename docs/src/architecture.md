@@ -60,6 +60,10 @@ Per-file index of `src/`, select exports listed. Full detail on the reference pa
 | `truncation.jl` | generator/state-informed basis truncation (reachable, observable, adaptive, multigrade tiering) | `reachable_basis`, `observable_basis`, `propagate_adaptive`, `grade_tiers`, `grade_reduce` |
 | `sequence.jl` | pulse sequences + shaped control-affine `𝓛(t)` + envelopes + feedback | `sequence`, `pulse`, `propagate_sequence`, `modulation` |
 | `feedback_analysis.jl` | nonlinear (state-dependent modulation) analysis | `linearize`, `fixed_point`, `feedback_threshold` |
+| `control.jl` | GRAPE adjoint-state optimizer over control amplitudes + structural parameters (reuses `sequence`/`feedback_analysis`) | `control`, `control_gradient`, `grape`, `MaximizeExpectation`, `StateOverlap`, `TrajectoryFit`, `Actuator`, `ParametricDrive`; plus non-exported internal objectives |
+
+The inverse-problem layer (system identification + state estimation) lives in the `Inference` submodule; see
+below.
 
 ## Systems & Readout
 
@@ -80,6 +84,16 @@ Per-file index of `src/`, select exports listed. Full detail on the reference pa
 | `spectral/moments.jl` | resolvent backends `(zI-A)⁻¹V` + contour moments / eigenvalue counting | `moments`, `eigcount`, `projector` |
 | `spectral/structure.jl` | eigenstructure / non-normality | `eigstructure`, `petermann_factor` |
 | `spectral/pseudospectra.jl` | non-normal diagnostics + transient-growth envelope | `resolvent_norm`, `kreiss_constant`, `kreiss_bracket`, `transient_bound`, `optimal_growth` |
+| `inference/Inference.jl` (`Inference`) | submodule hub: inverse-problem layer (fitting + state estimation), bridges to the control.jl adjoint | - |
+| `inference/conditions.jl` | unified `Condition` schema + `GaussianPrior` + `Separable` model spec | `Condition`, `GaussianPrior`, `info_prior`, `Separable` |
+| `inference/results.jl` | fit-result + uncertainty NamedTuple accessors | `cost`, `loglik`, `residuals`, `rss`, `nobs` |
+| `inference/kernels.jl` | shared LM step + FD Jacobian + eigen-robust Fisher→covariance + rank/condition | - |
+| `inference/fit.jl` | joint structural fit + separable (VARPRO) fit (exact forward-sensitivity Jacobian) | `fit` |
+| `inference/line_estimate.jl` | direct Hankel-SVD line estimator (HSVD / matrix pencil): seed-free FID frequencies/damping/amplitudes, the front end to `fit` | `hsvd` |
+| `inference/estimate.jl` | state estimation: `tomography` snapshot + moving-horizon smoother/filter; detection-σ weights | `tomography`, `smooth`, `moving_horizon`, `MovingHorizon`, `step!`, `noise_weights` |
+| `inference/diagnostics.jl` | Cramér-Rao uncertainty + flat-direction regularization + model selection + report | `uncertainty`, `flat_prior`, `multistart`, `info_criteria`, `fit_report` |
+| `inference/leggett_garg.jl` | Leggett-Garg classical-vs-quantum distinguisher (two-time regression correlators -> K3) | `leggett_garg` |
+| `integrations.jl` | backend-neutral model handoff to external solvers (the DV analogue of a continuous-variable `ModelContract`; consumed by e.g. QuantumCumulants spin cumulants) | `SpinContract`, `SpinTerm`, `spin_contract` |
 
 The detail for each symbol lives on its reference page; see [Public API & Stability](@ref "V1 Public API & Stability")
 for the stability tiers and naming conventions.

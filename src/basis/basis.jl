@@ -109,7 +109,22 @@ hilbert_dim(b::RestrictedBasis) = isempty(b.radix) ? hilbert_dim(b.N) : prod(flo
 "per-site Hilbert dimension d_k of site `k` (2 for a uniform spin-1/2 basis)."
 @inline site_dim(b::RestrictedBasis, k::Int) = isempty(b.radix) ? 2 : b.radix[k]
 
-# the identity string in a basis's representation, so rep-agnostic code names it without the label type.
+"""
+    identity_label(x) -> label
+
+The identity (grade-0, trace) basis label in the representation of `x` - either a label type
+(`PauliLabel`/`LadderLabel`/`SpinTensorLabel`) or a [`RestrictedBasis`](@ref) (which forwards to its label
+type). This is the element whose coefficient carries the trace of ρ (`Tr ρ = hilbert_dim · c[identity]`), so
+representation-agnostic code names it without hardcoding the label type.
+
+# Examples
+```jldoctest
+julia> b = restricted_basis(2, 2);
+
+julia> lookup(b, identity_label(b))        # the identity sits at index 1
+1
+```
+"""
 identity_label(::Type{PauliLabel})  = PAULI_ID
 identity_label(::Type{LadderLabel}) = LADDER_ID
 identity_label(::Type{SpinTensorLabel{B}}) where {B} = spin_tensor_id(B)   # higher-spin
@@ -141,6 +156,53 @@ function _build_index(labels::Vector{L}, which::Symbol) where {L}
     which === :dict   && return DictIndex(Dict{L,Int}(p => i for (i, p) in enumerate(labels)))
     which === :sorted && return SortedIndex(sortperm(labels))
     throw(ArgumentError("index must be :auto, :dict, or :sorted (got $which)"))
+end
+
+"""
+    restricted_basis(N, kmax, labels; index=:auto, sector=nothing,
+                     ensure_identity=true, closed_under=nothing) -> RestrictedBasis
+
+Build a basis from an EXPLICIT label set (manual truncation) instead of a grade/sector rule. `labels` is
+any iterable of labels - e.g. from [`pauli_label`](@ref), [`support_labels`](@ref),
+[`reachable_labels`](@ref), or another basis's `.labels` - and `kmax` is recorded as the grade bound. The
+identity (trace) mode is prepended automatically unless `ensure_identity=false`; duplicates are rejected.
+Pass `closed_under = H` (or `(H, jumps)`) to assert the span is closed under those dynamics: the boundary
+leakage `‖Q𝓛P‖` is computed via [`keepset_leakage`](@ref) and an `ArgumentError` is thrown if it exceeds
+`closed_atol` (otherwise the leaking couplings would be silently projected away). The `closed_under` check
+is the spin-1/2 (Pauli) path only.
+
+# Examples
+```jldoctest
+julia> b = restricted_basis(2, 1, [pauli_label(2, 1=>:x), pauli_label(2, 1=>:y), pauli_label(2, 1=>:z)]);
+
+julia> basis_size(b)                 # identity auto-prepended -> {I, X1, Y1, Z1}
+4
+
+julia> lookup(b, pauli_label(2, 2=>:z)) > 0    # spin 2 genuinely excluded
+false
+```
+"""
+function restricted_basis(N::Int, kmax::Int, labels; index::Symbol = :auto, sector = nothing,
+                          ensure_identity::Bool = true, closed_under = nothing, closed_atol::Real = 1e-10)
+    L = eltype(labels)
+    labs = collect(L, labels)
+    if ensure_identity
+        idl = identity_label(L)
+        (idl in labs) || pushfirst!(labs, idl)
+    end
+    allunique(labs) || throw(ArgumentError("restricted_basis: `labels` contains duplicates"))
+    if closed_under !== nothing
+        labs isa Vector{PauliLabel} || throw(ArgumentError(
+            "restricted_basis: `closed_under` is supported on the Pauli (spin-1/2) path only"))
+        H, jmp = closed_under isa Tuple ? closed_under : (closed_under, Tuple{PauliDict,Float64}[])
+        m = keepset_leakage(N, N, H, jmp, labs)                       # probe at full grade: catch any neighbor out of the set
+        leak = sqrt(sum(abs2, m.Lext[m.qrows, m.embed]))              # Frobenius norm of the Q𝓛P boundary
+        leak > closed_atol && throw(ArgumentError(
+            "restricted_basis: labels are not closed under the given dynamics (boundary leakage " *
+            "‖Q𝓛P‖ = $(round(leak; sigdigits = 3)) > $closed_atol); the missing couplings would be " *
+            "silently projected away. Enlarge the set (see reachable_labels), or relax `closed_atol`."))
+    end
+    return RestrictedBasis(N, kmax, labs, _build_index(labs, index), sector)
 end
 
 """
@@ -180,8 +242,25 @@ julia> length(restricted_basis(2, 2; radix = 3))      # two spin-1 sites: full 9
 function restricted_basis(N::Int, kmax::Int; parity::Union{Nothing,Symbol} = nothing,
                           weight::Union{Nothing,Int} = nothing, index::Symbol = :auto,
                           symmetry = nothing, clusters = nothing, radix = nothing,
+                          boson::Bool = false, spinboson::Bool = false, nmode::Int = 1,
+                          number::Union{Nothing,Int} = nothing,
                           max_dim::Int = typemax(Int))
     N ≥ 1 || throw(ArgumentError("N must be ≥ 1 (got $N)"))
+    if spinboson                                                 # mixed spin-boson basis (N spins + nmode modes, moment picture)
+        (parity === nothing && weight === nothing && symmetry === nothing &&
+         clusters === nothing && radix === nothing && !boson) || throw(ArgumentError(
+            "spinboson basis is a distinct representation: no parity/weight/symmetry/clusters/radix/boson (use `number` for the excitation sector)"))
+        index in (:auto, :dict, :sorted) || throw(ArgumentError("spinboson basis index must be :auto, :dict, or :sorted (got $index)"))
+        return _spinboson_basis(N, nmode, kmax, number, index)
+    end
+    if boson                                                     # bosonic a/a† monomial basis (CV, moment picture)
+        (parity === nothing && weight === nothing && symmetry === nothing &&
+         clusters === nothing && radix === nothing) || throw(ArgumentError(
+            "boson basis is a distinct representation: no parity/weight/symmetry/clusters/radix (use `number` for the photon-number sector)"))
+        index in (:auto, :dict, :sorted) || throw(ArgumentError("boson basis index must be :auto, :dict, or :sorted (got $index)"))
+        return _boson_basis(N, kmax, number, index)
+    end
+    number === nothing || throw(ArgumentError("`number` sector requires `boson = true` or `spinboson = true`"))
     # dimension is the real cap, not N. Skip for radix/symmetry/clusters: they build a REDUCED basis,
     # so the full-grade _restricted_dim (which overflows Float64 past typemax(Int) at large N·kmax) is both
     # irrelevant and would spuriously trip the cap even at the default max_dim=typemax.
@@ -516,6 +595,60 @@ function _ladder_basis(N::Int, kmax::Int, w::Int, index::Symbol)
         end
     end
     return RestrictedBasis(N, kmax, labels, _build_index(labels, index), w)
+end
+
+# Bosonic monomial basis: every normal-ordered ∏ a†ₖ^{mₖ} aₖ^{nₖ} on N modes with total grade
+# Σ(mₖ+nₖ) ≤ kmax, optionally restricted to net photon number Σ(mₖ-nₖ) == `number`. Unlike the spin
+# bases this is a moment/Heisenberg object (see boson.jl); pair it with `boson_moment_generator`.
+function _boson_basis(N::Int, kmax::Int, number::Union{Nothing,Int}, index::Symbol)
+    N ≤ BOSON_MAXMODES || throw(ArgumentError("boson basis supports N ≤ $BOSON_MAXMODES modes (got $N)"))
+    labels = BosonLabel[]
+    function rec(k::Int, remaining::Int, p::BosonLabel)
+        if k > N
+            (number === nothing || bweight(p) == number) && push!(labels, p)
+            return
+        end
+        for m in 0:remaining, n in 0:(remaining - m)
+            rec(k + 1, remaining - m - n, bset(p, k, m, n))
+        end
+    end
+    rec(1, kmax, BOSON_ID)
+    return RestrictedBasis(N, kmax, labels, _build_index(labels, index), number)
+end
+
+# Mixed spin-boson basis: every (spin ladder string) ⊗ (boson monomial) with total grade
+# lgrade + bgrade ≤ kmax on `nspin` spins and `nmode` modes, optionally restricted to excitation
+# sbweight == `number`. `nmode` is stashed in the basis `radix` field (read back by
+# `spinboson_moment_generator`); `N` is the spin count. Moment/Heisenberg object - pair with
+# `spinboson_moment_generator`.
+function _spinboson_basis(nspin::Int, nmode::Int, kmax::Int, number::Union{Nothing,Int}, index::Symbol)
+    nspin ≤ 64 || throw(ArgumentError("spinboson basis supports ≤ 64 spins (got $nspin)"))
+    nmode ≤ BOSON_MAXMODES || throw(ArgumentError("spinboson basis supports ≤ $BOSON_MAXMODES modes (got $nmode)"))
+    spins = LadderLabel[]                                   # all spin ladder strings, lgrade ≤ kmax
+    for g in 0:min(kmax, nspin), sites in _combinations(nspin, g)
+        for vals in Iterators.product(ntuple(_ -> 1:3, g)...)
+            p = LADDER_ID
+            for (s, v) in zip(sites, vals)
+                p = lset(p, s, v)
+            end
+            push!(spins, p)
+        end
+    end
+    bosons = BosonLabel[]                                   # all boson monomials, bgrade ≤ kmax
+    function brec(k::Int, remaining::Int, p::BosonLabel)
+        k > nmode && (push!(bosons, p); return)
+        for m in 0:remaining, n in 0:(remaining - m)
+            brec(k + 1, remaining - m - n, bset(p, k, m, n))
+        end
+    end
+    brec(1, kmax, BOSON_ID)
+    labels = SpinBosonLabel[]
+    for sp in spins, bo in bosons
+        lgrade(sp) + bgrade(bo) ≤ kmax || continue
+        lab = SpinBosonLabel(sp, bo)
+        (number === nothing || sbweight(lab) == number) && push!(labels, lab)
+    end
+    return RestrictedBasis(nspin, kmax, labels, _build_index(labels, index), number, nothing, Float64[], [nmode])
 end
 
 # Higher-spin (spin > 1/2) tensor basis.

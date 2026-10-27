@@ -237,7 +237,11 @@ On a real 5-spin SABRE system with two magnetically equivalent protons (a mu2-br
 (N=24) read through a local observable collapses 57,205 rows to 16, a 3575x lossless compression that carries
 over to the higher-spin basis.
 
-![Lossless reductions across systems: (a) a structural overview of lossless compression versus full basis dimension over many systems, keyed to the two spotlights below; (b) the reduction stack on a real 5-spin system; (c) a disconnected-cluster ensemble (N=24) compressed losslessly](assets/figures/f3_reductions.png)
+![Lossless reductions across spin systems.](assets/figures/f3_reductions.png)
+
+Lossless compression across many systems. **(a)** Compression versus full basis dimension, keyed to the two
+spotlights below. **(b)** The reduction stack on a 5-spin system. **(c)** A disconnected-cluster ensemble
+(N = 24).
 
 Reachable (input) basis:
 
@@ -452,7 +456,14 @@ J-multiplet structure. The z-filter is applied as a mask that keeps only longitu
 with zero transverse support), and the mixing time is propagated under dipolar relaxation alone: ideal
 Solomon cross-relaxation. Every feature of the spectrum comes from propagating the spin system.
 
-![Experimental strychnine 2D NOESY (IMSERC AVANCE 400, CDCl3, noesygpph, 400 ms mixing) beside the RSD pulse-sequence simulation (noesygpph, 256x1024, magnitude mode), the simulation reproducing the diagonal topology and the J-multiplet fine structure from first-principles DFT shifts and couplings](assets/validation/noesy_pulseq_strychnine.png)
+![Strychnine 2D NOESY: experiment beside the RSD pulse-sequence
+simulation.](assets/validation/noesy_pulseq_strychnine.png)
+
+Strychnine 2D NOESY from first-principles DFT shifts and couplings. **Left:** experiment (IMSERC AVANCE 400,
+CDCl3, noesygpph, 400 ms mixing). **Center:** RSD pulse-sequence simulation, magnitude mode (pseudo-echo
+window). **Right:** the same, phase-sensitive States (pedestal-Gaussian window, blue positive / red negative).
+Both sims 256x1024, reproducing the diagonal, the J-multiplet structure, and the dipolar cross-peaks (the
+small-molecule direct NOEs are negative, opposite the diagonal).
 
 The plumbing is gated against the trusted relaxation physics: on a strychnine subcluster the sequence
 transfer ratios reproduce the Solomon `exp(-R*tmix)` matrix to `6.9e-4`, the `t1` encoding is a cosine,
@@ -463,9 +474,30 @@ couplings.
 
 ### Reproducing
 
-The drift is first-principles: the ``^1``H chemical shifts come from a DFT shielding calculation and the
-scalar-coupling network from a DFT SSCC run, and the 2D sequence simulation loads them (via
-`scripts/tools/load_shifts.jl`) and runs the whole noesygpph program.
+The drift is first-principles. The ``^1``H chemical shifts come from an [ORCA](@ref ref-orca) PBE0 shielding
+calculation and the scalar-coupling network from a DFT SSCC run; those feed a [`SpinSystem`](@ref) on which the
+full `noesygpph` program is propagated (States quadrature in `F1`, a `256 x 1024` experiment-matched grid). The
+DFT-input generation, the parsers, and the 2D sequence driver live in the repository's `scripts/` tree, and the
+sequence transfer is gated against the Solomon `exp(-R t)` relaxation matrix.
+
+!!! note "Post-Processing"
+    The engine emits the raw States interferograms (the cosine- and sine-encoded `t1` FID matrices); a
+    reprocessing step renders the 2D spectrum from them:
+
+    - zero-order `t2` phase from the `(t1=0, t2=0)` point;
+    - States quadrature combination `A_cos + i·A_sin` of the absorption-mode `t2` spectra, Fourier transformed along `t1`;
+    - apodization: a pedestal-Gaussian window for the phase-sensitive panel, a centre-peaked pseudo-echo (sine-bell²) for magnitude;
+    - a half-dwell first-point scaling of each FID, and zero-filling.
+
+    Peak positions, signs, and intensities are propagated; the window sets only the lineshape.
+
+## Control (GRAPE)
+
+The reachability and controllability sets above say *which* basis a control problem can reach. The optimizer
+that acts on it (the GRAPE adjoint-state design of pulse amplitudes, parametric pulse shapes, and structural
+parameters) has its own page:
+[Control and Pulse Optimization](@ref). The inverse-problem (system-ID + state-estimation) layer that builds
+on the same adjoint lives in the [Inference](@ref "Inference (System ID & State Estimation)") submodule.
 
 ## Detection Noise
 

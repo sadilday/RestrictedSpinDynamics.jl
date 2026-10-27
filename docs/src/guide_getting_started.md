@@ -93,7 +93,7 @@ elements builds echoes and multi-pulse experiments; shaped and feedback control 
 
 ## Next Steps
 
-- The `scripts/tutorials/` directory: seven numbered, runnable walkthroughs of the library end to end - the
+- The `scripts/tutorials/` directory: seven numbered, runnable walkthroughs of the library end to end: the
   core spin-system workflow, the spin echo, relaxation and the NOE, chemical exchange, singlet order,
   grade-truncation scaling, and permutation symmetry (start with `01_spin_system.jl`).
 - [Grade Truncation and Polynomial State Space Scaling](@ref): the exactness condition and how to select ``k_{\max}``.
@@ -103,5 +103,6 @@ elements builds echoes and multi-pulse experiments; shaped and feedback control 
 - [Nakajima-Zwanzig Formalism](@ref): the projection view of truncation, the reduced-dynamics family
   (effective Liouvillian, memory kernel, TCL) and the multigrade auto-tiering.
 - [Chemical Exchange & Stochastic Liouville](@ref): kinetic compartments, SABRE, and the stochastic-Liouville route.
-- [Reachability, Control, and the Adaptive Basis](@ref): pulses, shaped control, and feedback.
 - [Relaxation Backends](@ref): open-system models, the reduction ladder, and reading rates or fixed points without propagating the stiff transient.
+- [Control and Pulse Optimization](@ref): the GRAPE adjoint for pulse amplitudes, parametric pulse shapes, and structural parameters.
+- [Inference and System Identification](@ref): fitting rate and coupling parameters to data with uncertainties, and reconstructing states and trajectories.

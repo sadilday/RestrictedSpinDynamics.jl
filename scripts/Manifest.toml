@@ -2,7 +2,7 @@
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "1f7abd1627ff18c4783e74ea3e0786de470ef228"
+project_hash = "4da5c835843ffb6ed9db69557e4e8b91a6cad603"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -2228,7 +2228,7 @@ version = "1.3.0"
 deps = ["CUDA", "ExponentialUtilities", "FFTW", "KrylovKit", "LinearAlgebra", "Random", "SparseArrays"]
 path = ".."
 uuid = "494a7345-c7b0-4aad-8175-caf91c12eacf"
-version = "1.0.0"
+version = "0.9.0"
 
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]

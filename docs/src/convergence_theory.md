@@ -19,7 +19,10 @@ where the signal is large (the AA'X system at a cutoff of two is the validated g
 every grade instead, the cutoff lands in the tail of the envelope and the error converges: the ``N=8`` chain
 below loses 3-4x per added grade, reaching 1% by grade five.
 
-![Convergence of one representative N=8 chain: the maximum <Iz> error versus the grade cutoff at three observable sites, falling roughly 3-4x per added grade (r about 0.3); a favorable, moderately coupled case](assets/figures/f2_exactness_convergence.png)
+![Grade convergence of a representative N=8 chain.](assets/figures/f2_exactness_convergence.png)
+
+Maximum ``\langle I_z\rangle`` error versus grade cutoff at three sites on an ``N=8`` chain (moderately
+coupled). The error drops ~3-4x per added grade (``r \approx 0.3``), reaching 1% by grade five.
 
 The per-grade factor is therefore not constant but ``r = a_{k+1}/a_k = v t/(k+1)``. Near the front
 (``k \approx v t``) it is the rate a practical cutoff sees; past the front (``k > v t``) the factorial takes
@@ -60,7 +63,12 @@ collapses onto this law (below). Graph density on its own does not predict ``r``
 connectivity matters only through the coupling it carries, so a dense but weakly coupled cluster, a tight
 proton network or an NOE-style dipolar web, behaves like a strongly coupled sparse one.
 
-![Per-grade convergence factor r against two a-priori predictors, pooled over a grid of coupling strength and graph density (random six-spin systems): (a) the total coupling Sum|J|; (b) the gauge-fixed spectral grade-raising ratio rho, with the parameter-free branching law r = rho/(1+rho) dashed. The three topologies overlap on one trend, so r is set by the scalar and not by strength or connectivity separately](assets/validation/grade_convergence_predictor.png)
+![The per-grade convergence factor against two predictors, over random six-spin systems.](assets/validation/grade_convergence_predictor.png)
+
+The measured per-grade factor ``r`` against two predictors, over random six-spin systems. **(a)** ``r`` versus
+total coupling ``\sum|J|``. **(b)** ``r`` versus the spectral grade-raising ratio ``\rho``, with the
+parameter-free law ``r = \rho/(1+\rho)`` dashed. The topologies collapse onto one trend, so ``\rho`` sets
+``r``, not strength or connectivity alone.
 
 The block ``\mathcal{Q}\mathcal{L}\mathcal{P}`` closes the loop with exactness: ``\mathcal{Q}\mathcal{L}\mathcal{P}=0``
 is the floor (``\rho=0``, exact), and ``\rho`` is largest at the isotropic and ZULF limit, where ``r`` nears its

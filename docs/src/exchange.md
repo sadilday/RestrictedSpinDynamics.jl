@@ -70,9 +70,14 @@ route above, population is not transferred between compartments; every bath stat
 The two-site preset is the textbook chemical-exchange coalescence: one spin hopping between two sites at
 ``\pm\delta`` with equal populations and rate ``k``. As ``k`` grows the two lines broaden, coalesce near
 ``k \approx \pi\Delta/\sqrt{2}``, and sharpen into one. The stochastic-Liouville engine reproduces the
-classical Bloch-McConnell lineshape across the whole series to machine precision.
+classical Bloch-McConnell lineshape across the whole series to machine precision
+(`scripts/validation/validate_exchange_coalescence.jl`).
 
-![Two-site exchange coalescence: stacked absorption lineshapes for increasing exchange rate k (two sharp peaks at slow exchange, a flat-topped coalescence near k = 44 Hz, and a single narrowing peak at fast exchange), with the RSD stochastic-Liouville engine (solid) and the classical Bloch-McConnell lineshape (dashed) overlaying to 1e-14](assets/validation/exchange_coalescence.png)
+![Two-site exchange coalescence lineshapes versus exchange rate.](assets/validation/exchange_coalescence.png)
+
+Two-site exchange coalescence: absorption lineshapes versus exchange rate k, from two sharp peaks (slow)
+through a flat-topped coalescence near k = 44 Hz to one narrowing peak (fast). The RSD stochastic-Liouville
+engine (solid) and the Bloch-McConnell lineshape (dashed) overlay to 1e-14.
 
 ```@autodocs
 Modules = [RestrictedSpinDynamics]

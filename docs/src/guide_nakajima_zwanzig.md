@@ -103,13 +103,13 @@ two-sided Kreiss bracket ([`RestrictedSpinDynamics.Spectral.kreiss_bracket`](@re
 ``\int_0^\infty\lVert\mathcal{K}(\tau)\rVert\,d\tau``, a direct measure of how much the discarded subspace
 leaks back before it relaxes.
 
-![The memory-kernel norm bounded by the non-normal spectral tools: (a) an engineered block whose kernel humps to 3.1x before decaying; (b) a physical grade-1 | grade-2 kernel of a collectively-decaying spin system whose numerical abscissa certifies monotone decay](assets/figures/f7_memory_kernel.png)
+![The memory-kernel norm bounded by the non-normal spectral tools.](assets/figures/f7_memory_kernel.png)
 
-On the engineered block (left) the kernel transiently grows to 3.1x before decaying; the numerical abscissa
-``\omega>0`` and the Kreiss bracket bound the hump, where the spectral abscissa (the tail slope alone) would
-miss it (`:stable_transient`). On the physical grade-1 | grade-2 kernel of a collectively-decaying spin system
-(right) the numerical abscissa ``\omega<0`` *certifies* monotone decay (`:stable_monotone`). These are the
-meters behind the `:memory`-versus-`:markov` tier choice in [Multigrade Tiering](@ref). A complementary exact
+**(a)** On the engineered block the kernel grows transiently to 3.1x before decaying; the numerical abscissa
+``\omega>0`` and the Kreiss bracket bound the hump that the spectral abscissa alone would miss
+(`:stable_transient`). **(b)** On the physical grade-1 | grade-2 kernel of a collectively-decaying spin system the
+numerical abscissa ``\omega<0`` *certifies* monotone decay (`:stable_monotone`). These are the meters behind the
+`:memory`-versus-`:markov` tier choice in [Multigrade Tiering](@ref). A complementary exact
 rewriting, the time-convolutionless form, expresses ``\rho_{\mathcal Q}(t)`` through ``\rho_{\mathcal P}(t)`` rather than
 its history and produces a time-local generator
 

@@ -27,7 +27,10 @@ basis, stepped by [`propagate`](@ref), with the discarded complement kept as a [
 Relaxation modeling is a fourth axis with its own collapse hierarchy (the
 [Reduction Ladder](@ref "The Reduction Ladder")).
 
-[![Method map: choose a time-evolution engine, apply the composable basis and generator (Nakajima-Zwanzig) reductions, and pick a relaxation tier](assets/figures/method_map.png)](assets/figures/method_map.png)
+[![Method map of the time-evolution choices.](assets/figures/method_map.png)](assets/figures/method_map.png)
+
+The method map: choose a time-evolution engine, apply the composable basis and generator (Nakajima-Zwanzig)
+reductions, and pick a relaxation tier.
 
 Each axis composes with the others and with any engine:
 
@@ -44,6 +47,17 @@ Each axis composes with the others and with any engine:
 - **Relaxation**: choose a tier on the secularity ladder, from the exact classical bath down to the
   Zeeman-secular rates. See [Relaxation Backends](@ref).
 
+## Beyond the Forward Problem
+
+Three capabilities build on the same engine:
+
+- **Control and optimization**: design pulse amplitudes, parametric pulse shapes, and structural parameters
+  (couplings, rates) through a differentiable GRAPE adjoint (one forward and one backward propagation per
+  gradient). See [Control and Pulse Optimization](@ref).
+- **Inference and system identification**: fit rate and coupling parameters to measured data with
+  uncertainties, and reconstruct states and trajectories (tomography, trajectory smoothing). See
+  [Inference and System Identification](@ref).
+
 ## Submodules
 
 - `RestrictedSpinDynamics.AHT`: average-Hamiltonian pulse-sequence design
@@ -52,8 +66,12 @@ Each axis composes with the others and with any engine:
   and non-normal transient-growth analysis (the Kreiss bracket, the measured envelope, and the optimal-growth
   initial state) that avoid the unreliable eigendecomposition of the non-normal restricted Liouvillian
   (see [Spectral (Contour)](@ref)).
+- `RestrictedSpinDynamics.Inference`: parameter estimation and state reconstruction, fitting rate and
+  coupling parameters to data with uncertainties and model selection, snapshot tomography, and
+  moving-horizon state estimation, built on the control adjoint
+  (see [Inference (System ID & State Estimation)](@ref)).
 
-Both submodules are Experimental; see [Public API & stability](@ref "V1 Public API & Stability").
+These submodules are Experimental; see [Public API & stability](@ref "V1 Public API & Stability").
 
 ## Origin
 

@@ -33,3 +33,26 @@ article h3[id^="Code"] {
     display: block;
     margin-inline: auto;
 }
+
+/* Center content-width tables on the measure rather than hugging the left. The Documenter theme sets
+   tables to display:block with width:initial, so they fill the column and margin:auto cannot center them;
+   width:fit-content shrink-wraps the box to its content so margin-inline:auto centers it. max-width:100%
+   keeps wide tables (benchmarks) bounded and scrolling via the theme's overflow-x. */
+#documenter article table {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+}
+
+/* Figure captions: a paragraph immediately after a standalone image, set smaller, muted, and on a tighter
+   measure than body text so it reads as a caption rather than more prose. Uses :has() (supported in all
+   current browsers; degrades to normal body text where it is not). The :not(:has(img)) guard stops a second
+   figure that directly follows the first from being styled as a caption. */
+#documenter article p:has(img) + p:not(:has(img)) {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    opacity: 0.72;
+    margin-top: 0.4rem;
+    max-width: 44rem;
+    margin-inline: auto;
+}

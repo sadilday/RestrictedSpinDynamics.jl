@@ -29,6 +29,8 @@ module RestrictedSpinDynamics
 # Algebra + basis (label representations + the RestrictedBasis capstone; dense N<=64 twin + sparse N>64 twin)
 include("basis/pauli.jl")
 include("basis/ladder.jl")               # before basis.jl (weight-sector enumeration)
+include("basis/boson.jl")                # before basis.jl (bosonic CV companion to the spin ladder)
+include("basis/spinboson.jl")            # before basis.jl (mixed spin-boson = ladder × boson)
 include("basis/spin_tensor.jl")
 include("symmetry/adaptation.jl")        # before basis.jl (orbit bases)
 include("basis/basis.jl")
@@ -66,23 +68,33 @@ include("gpu.jl")
 include("ensemble.jl")
 include("sequence.jl")
 include("feedback_analysis.jl")
+include("control.jl")               # GRAPE adjoint-state pulse/parameter optimizer
 
 # Readout + submodules
 include("noise.jl")
 include("spectrum.jl")
 include("aht.jl")                   # RestrictedSpinDynamics.AHT
 include("spectral/Spectral.jl")     # RestrictedSpinDynamics.Spectral
+include("inference/Inference.jl")   # RestrictedSpinDynamics.Inference (fitting + state estimation + Bayesian)
+include("integrations.jl")          # backend-neutral model handoff to external solvers (QuantumCumulants, ...)
 
 # Public API, grouped by subsystem.
 # Pauli-string algebra (pauli.jl)
 export PauliLabel, PAULI_ID, grade, order_parity, pauli_mult, pauli_comm
+# backend-neutral model handoff to external solvers (integrations.jl + QuantumCumulants extension)
+export SpinContract, SpinTerm, spin_contract, to_quantumcumulants
 # ladder (σ⁺/σ⁻/Z) algebra for weight sectors (ladder.jl)
 export LadderLabel, LADDER_ID, LadderDict, lgrade, lweight, ladder_mult, ladder_comm, pauli_to_ladder, ladder_to_pauli
+# bosonic (CV) and mixed spin-boson algebra (boson.jl / spinboson.jl): built but NOT exported in v0.9.1 -
+# the continuous-variable surface lands as a headline in v0.9.2. The code and tests stay; only the public
+# export (and its docs) are deferred. To re-enable, restore these two export lines and the bosonic entries
+# on the moment-generator export line below.
 # higher-spin (spin > 1/2) spherical-tensor representation (spin_tensor.jl)
 export SpinTensorLabel, TensorDict, spin_tensor_basis, spin_matrix, spin_dim, st_bits,
        tensor_op, tensor_mult, tensor_comm, tensor_table, tensor_state, st_grade, st_weight, st_rank
 # restricted basis + pluggable index backends (basis.jl)
 export RestrictedBasis, restricted_basis, lookup, basis_size, memory_estimate, hilbert_dim, dla_dimension, dla_report
+export identity_label
 export AbstractIndex, DictIndex, SortedIndex, RadixIndex
 export ClusterSpec
 # site-permutation symmetry adaptation, 1D irreps (symmetry/adaptation.jl)
@@ -130,7 +142,7 @@ export davies_jumps, bengs_levitt_jumps   # thermalized (detailed-balance) GKSL:
 # bundled spin-system spec (mixed electron/nuclear) + presets + one-call `simulate` (spin_system.jl)
 export SpinSystem, nspin, spin_radix, ISOTOPE_GAMMA, ISOTOPE_SPIN, mean_field_reduce, simulate
 # Liouvillian assembly + sector closure (liouvillian.jl)
-export build_liouvillian, check_sector_closure
+export build_liouvillian, check_sector_closure, orbit_dissipator   # bosonic moment generators (boson_moment_generator, spinboson_moment_generator, moment_expect, normal_modes) deferred to v0.9.2
 # grade-leakage superoperator Q L P at the truncation boundary (leakage.jl)
 export LeakageMap, leakage_operator, leakage_block, leakage_flow, leakage_rate, superradiance_leakage
 export effective_liouvillian   # projection-operator (Nakajima-Zwanzig) effective generator: EXPERIMENTAL
@@ -168,6 +180,15 @@ export Modulation, modulation, drive, propagate_modulation, Selective, observe
 export gaussian, sech_envelope, hann_window, sinc_envelope, sinusoid, tanh_sweep, adiabatic_drive, chirp_drive
 # nonlinear (feedback) analysis: Jacobian, self-consistent fixed point, instability threshold (feedback_analysis.jl)
 export linearize, fixed_point, feedback_threshold
+# GRAPE adjoint-state pulse/parameter optimizer (control.jl): EXPERIMENTAL
+export ControlObjective, MaximizeExpectation, StateOverlap, TrajectoryFit
+export Actuator, actuator, ParametricDrive, parametric_drive
+export ControlProblem, control, control_gradient, grape
+# Held off the public v0.9.1 surface (defined + tested, callable qualified): TransientGain, OperatingPoint
+# (specialized objectives) and ness_gradient (steady-state synthesis adjoint) - see docs/src/stability.md.
+# System identification + state estimation live in the RestrictedSpinDynamics.Inference submodule (namespaced,
+# not re-exported): Inference.fit / uncertainty / multistart / info_criteria / report / tomography / smooth /
+# moving_horizon / step!. See the Inference reference page.
 # (the mean-field RASER self-drive is a drive+Selective recipe, not an export; see the Propagation docs)
 # detection-chain noise post-processing (noise.jl)
 export nyquist_sigma, add_detection_noise, add_detection_noise_real

@@ -271,7 +271,7 @@ end
 
 ⟨op⟩ = Tr(op·ρ) for ρ = Σ c_α P_α and `op` a Pauli dict, via the trace-orthogonality Tr(P_β P_α) = 2^N
 δ_{βα}. The user always passes a Pauli `op`; on a ladder basis it is first converted (`pauli_to_ladder`),
-where the pairing becomes α = β† with a σ±-site trace factor (see `_obs_gather`).
+where the pairing becomes α = β† with a σ±-site trace factor.
 
 # Examples
 ```jldoctest

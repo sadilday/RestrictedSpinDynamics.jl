@@ -51,3 +51,46 @@ singlet_order_op
 near_equivalence
 product_state_coeffs
 ```
+
+## Model Contracts (external backends)
+
+A model contract is a backend-neutral handoff of an RSD spin model to an outside solver. [`spin_contract`](@ref)
+re-expresses a `PauliDict` Hamiltonian and `(PauliDict, rate)` jumps as a [`SpinContract`](@ref) of ``N``
+spin-1/2 (each term `coeff * ∏ σ_axis`, a [`SpinTerm`](@ref)); [`to_quantumcumulants`](@ref) renders that
+contract into QuantumCumulants.jl operators through a package extension, so QuantumCumulants stays a weak
+dependency. It is the discrete-variable analogue of a continuous-variable `ModelContract` (that one plus a
+bosonic mode).
+
+The motivating use is cross-validation: write the model once, propagate it with RSD's grade-truncated engine,
+and independently with QuantumCumulants' second-quantized cumulant closure, then compare where the two
+overlap. One spec, two engines: the same check RSD's earliest versions used to pin correspondence with
+QuantumCumulants.jl.
+
+### The round-trip
+
+`to_quantumcumulants` is only a stub until QuantumCumulants is loaded alongside RSD, at which point the
+extension supplies the real method. Build the contract, render it, and hand the operators to `meanfield`:
+
+```julia
+using RestrictedSpinDynamics, QuantumCumulants
+
+N     = 2
+H     = hamiltonian(zeeman(N, [1.0, 1.0]), jcoupling(N, 1, 2, 5.0))   # a PauliDict
+jumps = [(spin_pm(N, k, -1), 0.05) for k in 1:N]                      # σ⁻ decay on each spin, rate 0.05
+
+contract = spin_contract(H, jumps, N)          # backend-neutral SpinContract (N spin-1/2)
+qc = to_quantumcumulants(contract)             # -> (; h, H, J, rates, σ) QuantumCumulants operators
+eqs = meanfield([qc.σ(2, 1, 1)], qc.H, qc.J; rates = qc.rates)        # second-quantized cumulant equations
+```
+
+The returned named tuple carries the Hilbert space `h`, the Hamiltonian `H`, the collapse operators `J` with
+their `rates`, and the transition constructor `σ(α, β, k)`, ready for `meanfield(ops, H, J; rates = rates)`.
+Mind the state-labeling convention: QuantumCumulants uses `1 = ground, 2 = excited`, opposite RSD's `|e> = 1`,
+so `σz = σ22 - σ11` and the excited-to-ground lowering is `σ(2, 1, k)`. `spin_contract` itself needs no extra
+packages; only the `to_quantumcumulants` render step requires `using RestrictedSpinDynamics, QuantumCumulants`.
+
+```@autodocs
+Modules = [RestrictedSpinDynamics]
+Pages = ["integrations.jl"]
+Private = false
+```

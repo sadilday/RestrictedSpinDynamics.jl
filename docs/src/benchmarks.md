@@ -2,13 +2,27 @@
 
 What the restricted-basis method buys in practice, in three parts: **exact reductions** that shrink the state
 space (and compose), a matrix-free **propagator that scales** to large `N`, and the **reduced-dynamics and
-non-normal diagnostics** that come with grade truncation. All timings below are on an RTX 4070 (+ CPU). This is the performance side of the story; for correctness (the method reproducing known
-physics against analytic and exact references) see [Validation](validation.md).
+non-normal diagnostics** that come with grade truncation. All timings below are on an RTX 4070 (+ CPU); the
+scripts that produce them live under `scripts/validation/` and `scripts/analysis/` and write the committed
+CSVs in `data/`. This is the performance side of the story; for correctness (the method reproducing known
+physics against analytic and exact references) see [Validation](validation.md), including the
+Dicke-superradiance scaling, one-axis-twisting spin-squeezing, and grade-truncation exactness-floor
+benchmarks.
 
 ## Headline
 
+![Strychnine 2D NOESY: the experiment beside the RSD pulse-sequence
+simulation.](assets/validation/noesy_pulseq_strychnine.png)
+
+Strychnine 2D NOESY, first-principles against experiment. **Left:** the measured spectrum
+([IMSERC teaching dataset](https://imserc.northwestern.edu/guide/tutorials/specdata/spectra/str_noesy.html),
+AVANCE 400, CDCl3, 400 ms mixing). **Center/right:** the RSD pulse-sequence simulation (magnitude, then phase-sensitive
+States) from DFT couplings and PBE0/CPCM shifts, no fitted parameters. The diagonal, the J-multiplet structure,
+and the cross-peak pattern all reproduce the experiment.
+
 - **A real 22-spin natural product (strychnine) runs a full 2D NOESY pulse program from first-principles DFT
-  couplings**, its grade-3 restricted basis of 43,726 rows standing in for `4^22 ≈ 1.8e13` rows of full
+  couplings** (a B3LYP J-network on the pcJ-1 (¹H) / 6-31G\* (heavy) basis, gas phase; ¹H shifts refined at
+  [ORCA](@ref ref-orca) PBE0/6-311+G(2d,p) GIAO CPCM(chloroform)), its grade-3 restricted basis of 43,726 rows standing in for `4^22 ≈ 1.8e13` rows of full
   Liouville space (the `256 x 1024` `noesygpph` acquisition is in [Validation](validation.md)).
 - **Reachable-set truncation compresses a 57,205-row basis to 16 rows, losslessly** (obs_err ~ 6e-16) when
   the observable is local on a weakly-connected system.
@@ -70,17 +84,14 @@ case is a heterogeneous mixture: a nitroxide radical (TEMPOL-like: electron + ¹
 some of it coupled to the radical, some bulk. The electron is a hyperfine hub for its own molecule, so what
 an observable needs depends on where it sits.
 
-![Adaptive reductions on a radical + solvent mixture: (a) the observable-informed basis tracks how much of the network the observable sees (5 to 158 rows, lossless); (b) grade truncation, observable-informed reachability, and electron elimination compose to 312x for a radical-proton observable](assets/figures/f6_observable_informed.png)
+![Adaptive reductions on a radical plus solvent mixture: the observable-informed basis, and the composed reductions.](assets/figures/f6_observable_informed.png)
 
-**(a)** the `:observable` direction keeps only the strings on a path from the state to the measured
-quantity, so the basis is tailored to the observable: from **5 rows** for a bulk-solvent proton far from
-the radical (997x), to **139** for a radical proton that pulls in the whole paramagnetic cluster (36x), each
-exactly lossless (`obs_err = 0`). **(b)** the reductions stack. For the radical proton, grade truncation
-(4984 rows) composes with observable-informed reachability (139) and then [`mean_field_reduce`](@ref) folding
-the fast electron into a mean field plus a paramagnetic-relaxation channel (16 rows): **312x together**. The
-electron fold also removes the GHz clock that makes the full joint electron-nuclear system stiff.
-Grade/memory tiering ([`grade_tiers`](@ref)) automates the grade choice on top; the reductions are
-independent axes that multiply.
+**(a)** The `:observable` direction keeps only the strings on a path from state to observable, so the basis is
+tailored to each probe: **5 rows** for a bulk-solvent proton (997x) up to **139** for a radical proton pulling
+in the paramagnetic cluster (36x), each lossless (`obs_err = 0`). **(b)** The reductions stack: for the radical
+proton, grade truncation (4984) then observable-informed reachability (139) then [`mean_field_reduce`](@ref)
+folding the fast electron into a mean field plus a relaxation channel (16 rows), **312x together** (the fold
+also removes the stiff GHz electron clock). [`grade_tiers`](@ref) automates the grade on top; the axes multiply.
 
 ## Propagation at Scale
 
@@ -143,10 +154,34 @@ the complement generator `Q𝓛Q`, which is **non-normal**, so its spectral absc
 and the kernel `K(τ) = P𝓛Q e^{τ Q𝓛Q} Q𝓛P` can grow transiently before it decays. The
 [Spectral (Contour)](@ref) tools bound `‖K(τ)‖` rigorously:
 
-![The memory-kernel norm bounded by the non-normal spectral tools: (a) an engineered transient-growth block; (b) a physical grade-1|grade-2 kernel with certified monotone decay](assets/figures/f7_memory_kernel.png)
+![The memory-kernel norm bounded by the non-normal spectral tools, on an engineered and a physical
+kernel.](assets/figures/f7_memory_kernel.png)
 
-On the engineered block (left) the kernel humps to 3.1x before decaying (`:stable_transient`); the numerical
-abscissa `ω > 0` and the Kreiss bracket bound the hump, where the spectral abscissa `α` (the tail slope)
-undershoots it. On the physical grade-1 | grade-2 kernel of a collectively-decaying spin system (right) the
-numerical abscissa `ω < 0` *certifies* monotone decay (`:stable_monotone`). These are the meters behind the
-`:memory`-versus-`:markov` tier choice.
+**(a)** An engineered kernel humps to 3.1x before decaying (`:stable_transient`): the numerical abscissa
+`ω > 0` and the Kreiss bracket bound the hump, which the spectral abscissa `α` (the tail slope) undershoots.
+**(b)** A physical grade-1|grade-2 kernel of a collectively-decaying spin system: `ω < 0` certifies monotone
+decay (`:stable_monotone`). These meters drive the `:memory`-versus-`:markov` tier choice.
+
+## Reproducing
+
+```
+julia --project scripts/analysis/adaptive_basis_benchmark.jl    # -> data/adaptive_basis_benchmark.csv
+julia --project scripts/validation/benchmark_backends.jl        # -> data/benchmark_backends.csv
+julia --project scripts/validation/benchmark_ensemble.jl        # -> data/benchmark_ensemble.csv
+julia --project=scripts scripts/analysis/plot_benchmarks.jl     # -> docs/src/assets/benchmarks/*.png
+```
+
+The seven guide figures embedded across the manual (grade scaling, grade convergence, reductions,
+relaxation dispersion, higher spin, adaptive reductions, memory kernel) come from the same CSV-in / PNG-out
+pipeline:
+
+```
+julia --project=scripts scripts/analysis/emit_docs_figure_data.jl     # -> data/basis_scaling.csv, relaxation_dispersion.csv, symmetry_compression.csv
+julia --project=scripts scripts/validation/validate_higher_spin.jl    # -> data/higher_spin_{exactness,scale,trace}.csv (also the exactness gate)
+julia --project scripts/analysis/observable_informed_showcase.jl      # -> data/observable_informed.csv, reduction_stack.csv (F6)
+julia --project=scripts scripts/analysis/memory_kernel_bounds.jl      # -> data/memory_kernel_bounds_{toy,physical}.csv (F7)
+julia --project=scripts scripts/analysis/plot_docs_figures.jl         # -> docs/src/assets/figures/f1..f7*.png
+```
+
+Figures F2 and F3 reuse existing CSVs (`grade_memory_cost.csv`, `adaptive_basis_benchmark.csv`,
+`symmetry_compression.csv`, `f3_spotlights.csv`); F6 and F7 use the two showcase scripts above.

@@ -4,7 +4,9 @@
 @testset "architecture.md source map covers all src files" begin
     srcdir = normpath(joinpath(@__DIR__, "..", "src"))
     doc    = read(joinpath(@__DIR__, "..", "docs", "src", "architecture.md"), String)
-    omit   = Set(["bloch.jl"])   # standalone BlochViz (Makie); not include()d by the module
+    omit   = Set(["bloch.jl",      # standalone BlochViz (Makie); not include()d by the module
+                  "boson.jl",      # bosonic (CV) + spin-boson surface deferred to v0.9.2: built but unexported,
+                  "spinboson.jl"]) # intentionally absent from the v0.9.1 user-facing source map
     files  = String[]
     for (_, _, fs) in walkdir(srcdir), f in fs
         endswith(f, ".jl") && !(f in omit) && push!(files, f)   # match by basename

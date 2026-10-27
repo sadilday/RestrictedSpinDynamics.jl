@@ -22,7 +22,11 @@ symmetry and reachability. A spin-1 quadrupolar nutation is non-sinusoidal becau
 run reproduces it to machine precision; exactness across spin-1, spin-3/2, and mixed radix is gated in
 `validate_higher_spin.jl` (worst ``1.4\times10^{-15}``).
 
-![Higher-spin summary: (a) the grade-2 basis versus the full space across spin number, the compression growing with the local spin; (b) a spin-1 quadrupolar nutation where the restricted tensor run matches the exact dynamics to machine precision](assets/figures/f5_higher_spin.png)
+![Higher-spin summary: basis compression and a quadrupolar nutation check.](assets/figures/f5_higher_spin.png)
+
+Higher-spin summary. **(a)** Grade-2 basis versus the full space across spin number; compression grows with the
+local spin. **(b)** A spin-1 quadrupolar nutation: the restricted tensor run matches the exact dynamics to
+machine precision.
 
 ## Convention
 
@@ -155,7 +159,10 @@ On a single site the rank-`k` shell is the `(2k+1)`-dimensional multipole multip
 to rank 3 and fills `su(4)`. `simulate(...; dla = true)` prints the grade-floor and rank-ceiling on the
 higher-spin path.
 
-![Rank-resolved DLA: dimension stacked by multipole rank shell, spin-1 capping at rank 2 while spin-3/2 climbs to the rank-3 octupole](assets/figures/dla_rank_shells.png)
+![Rank-resolved dynamical Lie algebra dimension by multipole rank.](assets/figures/dla_rank_shells.png)
+
+Rank-resolved DLA dimension, stacked by multipole rank. Spin-1 caps at rank 2; spin-3/2 reaches the rank-3
+octupole.
 
 ## API
 

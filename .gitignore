@@ -19,9 +19,20 @@ scripts/**/*.jpg
 scripts/*.pdf
 scripts/*.png
 
-# logs and transient overnight-run data (regenerable; keep result CSVs)
+# logs and transient overnight-run / sweep data (regenerable; keep result CSVs)
 *.log
-data/zompd_gradesweep/
-data/zompd_gradesweep_literatureJ/
-data/zompd_overnight/
-data/zompd_spectrum/
+data/*_gradesweep/
+data/*_gradesweep_*/
+data/*_overnight/
+data/*_spectrum/
+
+# large binary / serialized blobs - never auto-stage (keep code and result CSVs)
+*.mp4
+*.mov
+*.webm
+*.jls
+*.npy
+*.npz
+*.h5
+*.pkl
+*.bin

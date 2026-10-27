@@ -82,6 +82,7 @@ Pages = ["spin_tensor.jl"]
 Private = false
 ```
 
+
 ## Sparse Labels (N > 64)
 
 The three encodings above pack each site into a fixed-width field, which caps the system at the word size

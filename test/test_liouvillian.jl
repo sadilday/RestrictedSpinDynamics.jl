@@ -429,4 +429,54 @@ end
     @test_throws ArgumentError adiabatic_elimination(N, Hb, jb, [1, 2]; space = :bogus)
 end
 
+@testset "orbit_dissipator == many-jump build_liouvillian (symmetric sector)" begin
+    for N in (6, 10)
+        b = restricted_basis(N, N; symmetry = SpinClasses(N, [collect(1:N)]))
+        Lf = build_liouvillian(b, PauliDict(); jumps = pump(N, 1:N, 2.5), check_sector = false)
+        Lo = orbit_dissipator(b, spin_pm(N, 1, +1), 2.5, 1:N)
+        @test norm(Matrix(Lf - Lo)) < 1e-12 * norm(Matrix(Lf))          # σ+ pump: exact orbit sum
+        Ld = build_liouvillian(b, PauliDict(); jumps = dephasing(N, 1:N, 0.3), check_sector = false)
+        Lod = orbit_dissipator(b, spin_op(N, 1, 3), 0.3, 1:N)
+        @test norm(Matrix(Ld - Lod)) < 1e-12 * norm(Matrix(Ld))         # σz dephasing: exact orbit sum
+    end
+    @test_throws ArgumentError orbit_dissipator(restricted_basis(4, 4), spin_pm(4, 1, +1), 1.0, 1:4)
+end
+
+@testset "coherent propagation preserves physical Bloch marginals (offset + J + drive)" begin
+    # Physicality gate: a coherent L = -i[H,.] is unitary conjugation, so a *physical* pure product state
+    # keeps every single-spin Bloch length |<σ>| <= 1. This began as a BUG-1 @test_broken reading 1.38; that
+    # was an unphysical initial state, not an engine error - `mags` is the σ-string coefficient <I_a> = <σ_a>/2,
+    # so a pure state needs |m| = 0.5, not 1.0 (mags=(1,0,0) is <σx>=2, min eigenvalue -0.75). See KNOWN_BUGS.md.
+    N = 2; basis = restricted_basis(N, N)                               # full grade: complete, exact
+    Hd = mergewith(+, hamiltonian(zeeman(N, [0.0, 3.0]), jcoupling(N, 1, 2, 1.0)),
+                   drive_hamiltonian(N, 1:N; ω1 = 3.0, phase = π/2))
+    L = build_liouvillian(basis, Hd)                                    # PURELY COHERENT: no jumps
+    c0 = ComplexF64.(product_state_coeffs(basis; mags = [(0.5,0.0,0.0), (0.5,0.0,0.0)]))   # |+x>|+x>, pure
+    ts = collect(range(0.0, 1.0; length = 201))
+    cT = propagate(basis, L, c0, ts; observables = ["z" => spin_op(N,1,3)], dt = ts[2], save_trajectory = true).trajectory[end]
+    bloch(c, s) = 2 * sqrt(sum(abs2(real(expect(basis, c, spin_op(N, s, a)))) for a in 1:3))   # |<σ>| = 2|<I>|
+    @test max(bloch(cT, 1), bloch(cT, 2)) <= 1 + 1e-9                   # physical Bloch marginals
+end
+
+@testset "coupled coherent propagation == exact dense (product state)" begin
+    # Positive regression gate: build_liouvillian's coherent assembly is algebraically exact for grade-changing
+    # couplings. A physical product state propagated by L = -i[H,.] matches an independent dense -i[H,.] sim to
+    # machine precision on every quadrature and every coupling. (A `secular ZZ <σy> reads 2x` symptom once stood
+    # here as @test_broken; it was an unphysical mags=(1,0,0) input, not the engine - see KNOWN_BUGS.md.)
+    N = 2; basis = restricted_basis(N, N)
+    sx = ComplexF64[0 1; 1 0] / 2; sy = ComplexF64[0 -im; im 0] / 2; sz = ComplexF64[1 0; 0 -1] / 2
+    axes = ((1, sx), (2, sy), (3, sz))
+    c0 = ComplexF64.(product_state_coeffs(basis; mags = [(0.5, 0.0, 0.0), (0.0, 0.0, 0.5)]))   # physical |+x>|+z>
+    ρ0 = dense_operator(Dict(basis.labels[k] => c0[k] for k in eachindex(basis.labels)), N)     # same state, dense
+    t = 0.3
+    for H in (ising(N, 1, 2, 1.0), xy(N, 1, 2, 1.0), jcoupling(N, 1, 2, 1.0))
+        L = build_liouvillian(basis, H)                                 # PURELY COHERENT
+        cp = exp(Matrix(L) * t) * c0
+        U = exp(-im * dense_operator(H, N) * t); ρt = U * ρ0 * U'
+        for s in 1:2, (a, m) in axes
+            @test real(expect(basis, cp, spin_op(N, s, a))) ≈ real(tr(ρt * site_embed(m, s, N, 2))) atol = 1e-9
+        end
+    end
+end
+
 end

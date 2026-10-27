@@ -23,13 +23,12 @@ the [Hamiltonian Terms](@ref) page.
 
 ## The Reduction Ladder
 
-![The relaxation reduction ladder: four backends stacked from the exact stochastic Liouville equation down to the Zeeman-secular closed forms, each labelled by the basis it is written in (none for the exact top, the H0 eigenbasis for Redfield and Davies, the Zeeman eigenbasis for the closed forms); each downward arrow adds one operation (bath elimination, non-secular truncation, or reframe to the Zeeman eigenbasis); descending adds one assumption per step and narrows validity from any field to high field only](assets/figures/reduction_ladder.svg)
+![The relaxation reduction ladder: four backends from the exact stochastic Liouville equation down to the Zeeman-secular closed forms.](assets/figures/reduction_ladder.svg)
 
-The figure reads top (exact) to bottom (high-field closed forms). Two independent things change on the way
-down, and the ladder keeps them apart: the **basis** the generator is written in (none at the exact top, then
-the ``H_0`` eigenbasis, then the Zeeman eigenbasis, on the nodes) and the **approximation** added at each step
-(an elimination or a truncation, on the arrows). The exact top is frame-agnostic, since a change of frame is
-only a unitary on the same generator.
+From the exact top to the high-field closed forms at the bottom, two things change independently: the
+**basis** the generator is written in (none at the top, then the ``H_0`` eigenbasis, then the Zeeman
+eigenbasis, on the nodes) and the **approximation** at each step (an elimination or truncation, on the arrows).
+The exact top is frame-agnostic, since a change of frame is only a unitary on the same generator.
 
 Reading down: the exact stochastic Liouville equation holds at any field; eliminating the bath in a fast,
 Gaussian limit gives the second-order Bloch-Redfield generator in the ``H_0`` eigenbasis; truncating the
@@ -85,7 +84,10 @@ The choice of density reshapes the dispersion: the diffusion hallmark is the ``\
 cross-rate ``\sigma`` from [`solomon_rates`](@ref) changes sign near ``\omega_0\tau_c \approx 1``: positive
 NOE in extreme narrowing, spin-diffusion at slow tumbling.
 
-![Solomon cross (sigma) and auto relaxation rates versus omega0 times tau_c, for the BPP and Hwang-Freed spectral densities](assets/figures/f4_relaxation_dispersion.png)
+![Solomon relaxation rates versus the correlation time, for two spectral densities.](assets/figures/f4_relaxation_dispersion.png)
+
+The Solomon cross-rate ``\sigma`` and the auto-relaxation rate against ``\omega_0\tau_c``, for the BPP and
+Hwang-Freed spectral densities. ``\sigma`` crosses zero near ``\omega_0\tau_c \approx 1``.
 
 ## First versus Second Kind
 
@@ -329,7 +331,8 @@ mean-field operating point of a feedback (RASER) loop, where the generator depen
 
 ## Validation
 
-Each backend is checked against a closed form or experiment (`test/test_relaxation.jl`): dipolar against the Solomon ``\sigma`` and ``\rho`` rates, CSA against the
+Each backend is checked against a closed form or experiment (`test/test_relaxation.jl` and the
+`scripts/validation/` gates): dipolar against the Solomon ``\sigma`` and ``\rho`` rates, CSA against the
 axial rates, the paramagnetic second-kind models against the SBM closed form and a nitroxide NMRD profile
 across eight field decades, and [`redfield_jumps`](@ref) against the Zeeman-secular backends at high field.
 When you switch tiers, re-check the observable: the reduction ladder is exactly the map of what each tier

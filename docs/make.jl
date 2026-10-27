@@ -6,7 +6,16 @@ using RestrictedSpinDynamics
 # helpers are internal (unexported) for v1 but still doctested, so bring them into the doctest scope too.
 DocMeta.setdocmeta!(RestrictedSpinDynamics, :DocTestSetup,
                     :(using RestrictedSpinDynamics;
-                      using RestrictedSpinDynamics: sabre, sabre_rate, singlet_refresh, tunneling_exchange);
+                      using RestrictedSpinDynamics: sabre, sabre_rate, singlet_refresh, tunneling_exchange;
+                      # bosonic / spin-boson symbols are unexported in v0.9.1 (deferred to v0.9.2) but still
+                      # doctested; bring them into the doctest scope.
+                      using RestrictedSpinDynamics: BosonLabel, BOSON_ID, BosonDict, bgrade, bweight, boson_mult,
+                          boson_comm, bop_mult, bop_dag, bcreate, bdestroy, bnumber, boson_hamiltonian,
+                          boson_dissipator, caldeira_leggett, dephasing_bath, boson_moment_generator, moment_expect,
+                          normal_modes, SpinBosonLabel, SPINBOSON_ID, SpinBosonDict, sbgrade, sbweight, sb_mult,
+                          sbop_mult, sbop_dag, sb_from_ladder, sb_from_boson, sb_sigma_plus, sb_sigma_minus,
+                          sb_sigma_z, sb_create, sb_destroy, sb_number, spinboson_hamiltonian, spinboson_dissipator,
+                          polariton, spinboson_moment_generator);
                     recursive = true)
 
 # Pages are grouped to mirror the subsystem grouping of the `export` list in
@@ -19,6 +28,7 @@ makedocs(
         RestrictedSpinDynamics,
         RestrictedSpinDynamics.AHT,
         RestrictedSpinDynamics.Spectral,
+        RestrictedSpinDynamics.Inference,
     ],
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", "false") == "true",
@@ -45,6 +55,8 @@ makedocs(
             "The Convergence Rate" => "convergence_theory.md",
             "Symmetry Capabilities" => "guide_symmetry.md",
             "Reachability, Control, and the Adaptive Basis" => "guide_basis_reduction.md",
+            "Control and Pulse Optimization" => "control.md",
+            "Inference and System Identification" => "inference_theory.md",
             "Higher-Spin (Experimental)" => "higher_spin.md",
             "Reduced Dynamics (Nakajima-Zwanzig)" => "guide_nakajima_zwanzig.md",
             "Relaxation Backends" => "relaxation_backends.md",
@@ -65,6 +77,7 @@ makedocs(
         "Submodules" => [
             "Average Hamiltonian (AHT)" => "aht.md",
             "Spectral (Contour)" => "spectral.md",
+            "Inference (System ID & State Estimation)" => "inference.md",
         ],
         "Appendix" => [
             "Public API & Stability" => "stability.md",
