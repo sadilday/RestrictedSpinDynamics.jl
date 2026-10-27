@@ -1,0 +1,46 @@
+%% Source for docs/src/assets/figures/method_map.png (embedded in docs/src/index.md).
+%% Regenerate: mmdc -i method_map.mmd -o method_map.png -b white -s 2
+flowchart TD
+    Q{"What do you need?"}
+    Q -->|"trajectory O(t)"| ENG["Choose an engine"]
+    Q -->|"steady state"| SS["steady_state"]
+    Q -->|"relaxation rate only"| IR["initial_rate"]
+    Q -->|"spectrum / FID"| SP["spectrum, peaks"]
+    Q -->|"optimal pulse / parameters"| OPT["Design a controller"]
+
+    ENG --> E1["static L: propagate (krylov / dense / gpu)"]
+    ENG --> E2["time-dependent: modulation, sequence, propagate_timedep"]
+    ENG --> E3["classical bath: sle"]
+    ENG --> E4["phenomenological memory: pome"]
+    ENG --> E5["symmetry-blocked: propagate_blocks"]
+    ENG --> E6["isochromat batch: propagate_ensemble"]
+
+    OPT --> O1["pulse amplitudes + parametric shapes: control, grape"]
+    OPT --> O2["structural params: control (structural arg)"]
+
+    subgraph BASIS["Basis reduction (composes; lossless unless noted)"]
+        direction LR
+        B0["grade kmax"] --> B1["parity / weight / point-group sectors"] --> B2["reachability (lossless)"] --> B3["ZTE / adaptive (lossy)"]
+    end
+
+    subgraph GEN["Generator reduction (Nakajima-Zwanzig)"]
+        direction LR
+        G1["memory_kernel (exact NZ kernel)"] ~~~ G2["tcl_generator (time-local)"] ~~~ G3["effective_liouvillian (Markovian)"] ~~~ G4["grade_tiers / grade_reduce (auto-tier)"]
+    end
+
+    ENG -.->|"basis + generator reduction (any engine)"| BASIS
+    BASIS --> GEN
+    ENG -.->|"relaxation model (any engine)"| SEC
+
+    subgraph SEC["Relaxation: secularity ladder"]
+        direction LR
+        R1["stochastic Liouville (sle): exact classical bath"] --> RP["pome: phenomenological memory (non-Markovian)"] --> R2["Bloch-Redfield (eigenbasis): redfield_jumps"] --> R3["Davies secular (thermalized): davies_jumps (full-H) / bengs_levitt_jumps (dominant-H)"] --> R4["Zeeman-secular: Solomon / CSA / scalar"]
+    end
+
+    subgraph KIND["Relaxation: kind (Abragam)"]
+        direction TB
+        K1["first kind (lattice modulates the coupling): DipolarRelaxation / CSARelaxation / ScalarRelaxation"]
+        K2["second kind (eliminated partner): ScalarSecondKind / DipolarSecondKind"]
+    end
+
+    SEC -.->|"orthogonal axis"| KIND
