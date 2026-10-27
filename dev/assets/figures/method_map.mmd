@@ -6,6 +6,7 @@ flowchart TD
     Q -->|"steady state"| SS["steady_state"]
     Q -->|"relaxation rate only"| IR["initial_rate"]
     Q -->|"spectrum / FID"| SP["spectrum, peaks"]
+    Q -->|"optimal pulse / parameters"| OPT["Design a controller"]
 
     ENG --> E1["static L: propagate (krylov / dense / gpu)"]
     ENG --> E2["time-dependent: modulation, sequence, propagate_timedep"]
@@ -13,6 +14,9 @@ flowchart TD
     ENG --> E4["phenomenological memory: pome"]
     ENG --> E5["symmetry-blocked: propagate_blocks"]
     ENG --> E6["isochromat batch: propagate_ensemble"]
+
+    OPT --> O1["pulse amplitudes + parametric shapes: control, grape"]
+    OPT --> O2["structural params: control (structural arg)"]
 
     subgraph BASIS["Basis reduction (composes; lossless unless noted)"]
         direction LR
