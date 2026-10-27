@@ -4,6 +4,33 @@ All notable changes to RestrictedSpinDynamics.jl are documented here. The format
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-10-27
+
+Adds the inverse-problem layer on top of the restricted-basis engine: an **Inference** submodule for system
+identification and state estimation, and a **GRAPE** adjoint optimizer for control. CUDA becomes a weak
+dependency, so CPU-only installs stay lean.
+
+### Added
+
+- **Inference submodule** (`RestrictedSpinDynamics.Inference`; system ID and state estimation). Fit structural
+  parameters such as couplings and relaxation rates to measured FIDs with calibrated Cramer-Rao uncertainty;
+  variable-projection (VARPRO) fits of multi-line signals; natural-gradient and Levenberg-Marquardt optimizers
+  with exact forward sensitivities; Hankel-SVD line estimation; moving-horizon state estimation; corrected-AIC
+  and BIC model selection; and Leggett-Garg two-time correlators. Documented on the Inference and Inference
+  Theory manual pages.
+- **Control (GRAPE)**: adjoint-state optimization of pulse amplitudes, parametric pulse shapes, and structural
+  parameters, reusing the same forward and backward generator. Documented on the Control manual page.
+
+### Changed
+
+- **CUDA is now a weak dependency** (`[weakdeps]` plus a package extension), so CPU-only installs no longer
+  pull the CUDA stack. The GPU backend activates on `using CUDA`; GPU users add CUDA explicitly.
+
+### Tests
+
+- Added a product-state coupled-propagation exactness gate: `build_liouvillian` matches an independent dense
+  `-i[H, .]` reference across the `ising`, `xy`, and `jcoupling` couplings to machine precision.
+
 ## [0.9.0] - 2026-10-10
 
 First public release. The API is stable in practice but held at 0.9 ahead of 1.0 pending the
