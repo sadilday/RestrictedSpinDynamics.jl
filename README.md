@@ -2,6 +2,7 @@
 
 [![Docs (dev)](https://img.shields.io/badge/docs-dev-blue.svg)](https://sadilday.github.io/RestrictedSpinDynamics.jl/dev)
 [![CI](https://github.com/sadilday/RestrictedSpinDynamics.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/sadilday/RestrictedSpinDynamics.jl/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/sadilday/RestrictedSpinDynamics.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/sadilday/RestrictedSpinDynamics.jl)
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](LICENSE)
 
 Restricted state-space simulation of open-system NMR spin dynamics in Julia. The density matrix is
@@ -15,8 +16,8 @@ space (superradiance / RASER, SABRE and SLIC transfer, INEPT) stay tractable.
 pkg> add https://github.com/sadilday/RestrictedSpinDynamics.jl
 ```
 
-For development, clone and run `julia --project -e 'using Pkg; Pkg.instantiate()'` (the `Manifest.toml`
-is committed, so versions are pinned).
+For development, clone and run `julia --project -e 'using Pkg; Pkg.instantiate()'` (resolves the latest
+compatible versions of the dependencies).
 
 ## Quickstart
 
@@ -74,13 +75,13 @@ Guides and the full API reference are at
 Seven numbered scripts in `scripts/tutorials/`:
 
 ```
-julia --project scripts/tutorials/01_spin_system.jl    # build -> pulse -> FID -> spectrum
-julia --project scripts/tutorials/02_echo.jl           # Hahn echo: refocusing a chemical-shift spread
-julia --project scripts/tutorials/03_relaxation.jl     # dipolar cross-relaxation (NOE) vs the Solomon rates
-julia --project scripts/tutorials/04_exchange.jl       # two-site exchange lineshape coalescence
-julia --project scripts/tutorials/05_singlet.jl        # long-lived singlet order and its leakage
-julia --project scripts/tutorials/06_scaling.jl        # grade truncation: basis size and picking kmax
-julia --project scripts/tutorials/07_symmetry.jl       # permutation symmetry: cost independent of N
+julia --project=scripts scripts/tutorials/01_spin_system.jl    # build -> pulse -> FID -> spectrum
+julia --project=scripts scripts/tutorials/02_echo.jl           # Hahn echo: refocusing a chemical-shift spread
+julia --project=scripts scripts/tutorials/03_relaxation.jl     # dipolar cross-relaxation (NOE) vs the Solomon rates
+julia --project=scripts scripts/tutorials/04_exchange.jl       # two-site exchange lineshape coalescence
+julia --project=scripts scripts/tutorials/05_singlet.jl        # long-lived singlet order and its leakage
+julia --project=scripts scripts/tutorials/06_scaling.jl        # grade truncation: basis size and picking kmax
+julia --project=scripts scripts/tutorials/07_symmetry.jl       # permutation symmetry: cost independent of N
 ```
 More tutorials to be added.
 

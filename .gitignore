@@ -36,3 +36,4 @@ data/*_spectrum/
 *.h5
 *.pkl
 *.bin
+/Manifest.toml

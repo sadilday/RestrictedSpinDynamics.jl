@@ -18,7 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         version: ['1.12', 'nightly']
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
+        exclude:
+          - version: 'nightly'
+            os: macos-latest          # macOS on the stable version only
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
@@ -27,6 +30,14 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+      - uses: julia-actions/julia-processcoverage@v1
+        if: matrix.os == 'ubuntu-latest' && matrix.version == '1.12'
+      - uses: codecov/codecov-action@v4
+        if: matrix.os == 'ubuntu-latest' && matrix.version == '1.12'
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+        continue-on-error: true
 
   docs:
     name: Documentation
